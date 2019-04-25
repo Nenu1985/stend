@@ -1,4 +1,9 @@
-import os
+# Installation via pyinstaller:
+# pip install pyinstaller
+#
+# RUN:
+# pyinstaller --hidden-import python-docx --hidden-import pyqtgraph --onefile main_ui.py
+
 import sys
 import collections
 
