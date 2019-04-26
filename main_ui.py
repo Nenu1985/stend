@@ -18,21 +18,35 @@ import form
 from cmath import rect
 from chart import Chart
 from chart_properties import ChartProperties as chart_prop
+# from PyQt4 import QtCore, QtGuif
+
 # Команда для преобразования файла QtDesigner в питоновский:
 # -------->  pyuic5 UI.ui -o ui.py
 # -------->  pyuic5 form.ui -o form.py
 
 
 class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
-    # files = ['s67.s2p', 's68.s2p', 's69.s2p', 's78.s2p']
-    files = ['s67.s2p', 's68.s2p', 's69.s2p', 's78.s2p', 's89.s2p', 's610.s2p',]
-
 
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.files = [
+            's67.s2p',
+            's68.s2p',
+            's69.s2p',
+            's78.s2p',
+            's89.s2p',
+            's610.s2p',
+        ]
 
+        self.spinBox_impedance.setValue(50)
 
+        self.lineEdit_filename1.setText(self.files[0])
+        self.lineEdit_filename2.setText(self.files[1])
+        self.lineEdit_filename3.setText(self.files[2])
+        self.lineEdit_filename4.setText(self.files[3])
+        self.lineEdit_filename5.setText(self.files[4])
+        self.lineEdit_filename6.setText(self.files[5])
 
         self.chart_properties = [
             chart_prop(color='#ff0000'),
@@ -42,6 +56,13 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             chart_prop(color='#0000aa'),
             chart_prop(color='#00aa00'),
         ]
+
+        self.pushButton_open_file1.clicked.connect(self.onclick_open_file1)
+        self.pushButton_open_file2.clicked.connect(self.onclick_open_file2)
+        self.pushButton_open_file3.clicked.connect(self.onclick_open_file3)
+        self.pushButton_open_file4.clicked.connect(self.onclick_open_file4)
+        self.pushButton_open_file5.clicked.connect(self.onclick_open_file5)
+        self.pushButton_open_file6.clicked.connect(self.onclick_open_file6)
 
         self.pushButton_color1.clicked.connect(self.onclick_color1)
         self.pushButton_color1.setStyleSheet("background-color: {}".format(self.chart_properties[0].color))
@@ -75,7 +96,6 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def plot_chart(self):
         chart = pg.PlotWidget(background=pg.mkColor('w'))
         chart.addLegend(offset=(600, 30))
-
 
         chart.getPlotItem().axes['left']['item'].setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
         chart.getPlotItem().axes['left']['item'].setGrid(255)
@@ -117,8 +137,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
                 f, *values = line
                 data[float(f) / 10 ** 6] = list(map(float, values))
 
-        data = dict(collections.OrderedDict(sorted(data.items())).items())
-
+        data = collections.OrderedDict(sorted(data.items()))
         freq_values = list(data.keys())
         freq_values = np.asarray(freq_values).astype(np.float)
         values_correct_format = np.asarray(list(data.values())).astype(np.float)
@@ -171,7 +190,37 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         return freqs, zx
 
+
+    def browse_folder(self):
+        return QtWidgets.QFileDialog.getOpenFileName(self, 'Выберите файл')[0]
+
+
 #-------------------------------------- EVENT HANDLERS ----------------------#
+
+    def onclick_open_file1(self):
+        self.files[0] = self.browse_folder()
+        self.lineEdit_filename1.setText(self.files[0])
+
+    def onclick_open_file2(self):
+        self.files[1] = self.browse_folder()
+        self.lineEdit_filename2.setText(self.files[1])
+
+    def onclick_open_file3(self):
+        self.files[2] = self.browse_folder()
+        self.lineEdit_filename3.setText(self.files[2])
+
+    def onclick_open_file4(self):
+        self.files[3] = self.browse_folder()
+        self.lineEdit_filename4.setText(self.files[3])
+
+    def onclick_open_file5(self):
+        self.files[4] = self.browse_folder()
+        self.lineEdit_filename5.setText(self.files[4])
+
+    def onclick_open_file6(self):
+        self.files[5] = self.browse_folder()
+        self.lineEdit_filename6.setText(self.files[5])
+
     def onclick_color1(self):
         color = QColorDialog.getColor()
         self.chart_properties[0].color = color.name()
@@ -272,26 +321,6 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.y_values = []
         self.freq_values, self.y_values = MainApp.get_data_values(6, self.files)
         self.plot_chart()
-
-    # def browse_folder(self):
-    #     files = QtWidgets.QFileDialog.getOpenFileName(self, 'Выберите файл')
-    #     #
-    #     # for f in files:
-    #     #     self.listWidget.addItem(f)
-    #
-    #
-    #
-    #     for key, value in ordered_data.items():
-    #         x_dates.append(key)
-    #         y_dates.append(value[0])
-    #
-    #     x_dates = np.asarray(x_dates).astype(np.float)
-    #     y_dates = np.asarray(y_dates).astype(np.float)
-    #     axes = pg.AxisItem(orientation='right')
-    #     axes.setPen(color=pg.mkColor('b'))
-
-
-        # self.horizontalLayout
 
 
 def main():
