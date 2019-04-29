@@ -8,9 +8,7 @@ class ChartProperties:
         self.type = type
 
     def __str__(self):
-        return 'color: {}; thick: {}; type: {}'.format(
-            self.color, self.line_thick, self.type
-        )
+        return 'Chart property = color {}; thick {}'.format(self.color, self.line_thick)
 
     def __repr__(self):
-        return self.__str__()
+        return 'color {}; thick {}'.format(self.color, self.line_thick)

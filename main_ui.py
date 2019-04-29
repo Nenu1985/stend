@@ -6,7 +6,7 @@
 
 import sys
 import collections
-
+import json
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QColorDialog
 from PyQt5.QtGui import QFont
@@ -30,33 +30,34 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.files = [
-            's67.s2p',
-            's68.s2p',
-            's69.s2p',
-            's78.s2p',
-            's89.s2p',
-            's610.s2p',
-        ]
+        self.dialog = Chart()
 
-        self.spinBox_impedance.setValue(50)
+        # загрузка сохранённых данных из файла
+        try:
+            json_data = {}
+            with open('data.txt') as json_file:
+                json_data = json.load(json_file)
+        except FileNotFoundError:
+            print('There is no setting file "data.txt"')
 
-        self.lineEdit_filename1.setText(self.files[0])
-        self.lineEdit_filename2.setText(self.files[1])
-        self.lineEdit_filename3.setText(self.files[2])
-        self.lineEdit_filename4.setText(self.files[3])
-        self.lineEdit_filename5.setText(self.files[4])
-        self.lineEdit_filename6.setText(self.files[5])
+        self.files = json_data['files']
+        self.impedance = json_data['impedance']
+        self.chart_properties = []
+        for prop in json_data['chart_properties']:
+            self.chart_properties.append(chart_prop(
+                color=prop['color'],
+                thick=prop['line_thick'],
+                type=prop['type'],
+            )
+            )
+        self.setGeometry(QtCore.QRect(*json_data['main_geometry']))
+        self.dialog.setGeometry(QtCore.QRect(*json_data['child_geometry']))
 
-        self.chart_properties = [
-            chart_prop(color='#ff0000'),
-            chart_prop(color='#0000ff'),
-            chart_prop(color='#00ff00'),
-            chart_prop(color='#aa0000'),
-            chart_prop(color='#0000aa'),
-            chart_prop(color='#00aa00'),
-        ]
 
+        # Отображаем начальные значения в контролах
+        self.set_init_values_to_controls()
+
+        # ----------- ПОДПИСЬ ОБРАБОТЧИКОВ СОБЫТИЙ --------------- #
         self.pushButton_open_file1.clicked.connect(self.onclick_open_file1)
         self.pushButton_open_file2.clicked.connect(self.onclick_open_file2)
         self.pushButton_open_file3.clicked.connect(self.onclick_open_file3)
@@ -64,18 +65,21 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.pushButton_open_file5.clicked.connect(self.onclick_open_file5)
         self.pushButton_open_file6.clicked.connect(self.onclick_open_file6)
 
+        self.spinBox_impedance.valueChanged.connect(self.spinBox_impedance_valueChanged)
+
         self.pushButton_color1.clicked.connect(self.onclick_color1)
-        self.pushButton_color1.setStyleSheet("background-color: {}".format(self.chart_properties[0].color))
         self.pushButton_color2.clicked.connect(self.onclick_color2)
-        self.pushButton_color2.setStyleSheet("background-color: {}".format(self.chart_properties[1].color))
         self.pushButton_color3.clicked.connect(self.onclick_color3)
-        self.pushButton_color3.setStyleSheet("background-color: {}".format(self.chart_properties[2].color))
         self.pushButton_color4.clicked.connect(self.onclick_color4)
-        self.pushButton_color4.setStyleSheet("background-color: {}".format(self.chart_properties[3].color))
         self.pushButton_color5.clicked.connect(self.onclick_color5)
-        self.pushButton_color5.setStyleSheet("background-color: {}".format(self.chart_properties[4].color))
         self.pushButton_color6.clicked.connect(self.onclick_color6)
-        self.pushButton_color6.setStyleSheet("background-color: {}".format(self.chart_properties[5].color))
+
+        self.spinBox_thickness1.valueChanged.connect(self.spinBox_thickness1_valueChanged)
+        self.spinBox_thickness2.valueChanged.connect(self.spinBox_thickness2_valueChanged)
+        self.spinBox_thickness3.valueChanged.connect(self.spinBox_thickness3_valueChanged)
+        self.spinBox_thickness4.valueChanged.connect(self.spinBox_thickness4_valueChanged)
+        self.spinBox_thickness5.valueChanged.connect(self.spinBox_thickness5_valueChanged)
+        self.spinBox_thickness6.valueChanged.connect(self.spinBox_thickness6_valueChanged)
 
         self.pushButton_S11.clicked.connect(self.calc_s11_data)
         self.pushButton_S21.clicked.connect(self.calc_s21_data)
@@ -88,10 +92,33 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.pushButton_Rx2_re.clicked.connect(self.calc_Rx2_re_data)
         self.pushButton_Rx2_im.clicked.connect(self.calc_Rx2_im_data)
 
-        self.dialog = Chart()
+
         self.freq_values = []
         self.y_values = []
         # при нажатии кнопки
+
+    def set_init_values_to_controls(self):
+        self.spinBox_impedance.setValue(self.impedance)
+
+        self.lineEdit_filename1.setText(self.files[0])
+        self.lineEdit_filename2.setText(self.files[1])
+        self.lineEdit_filename3.setText(self.files[2])
+        self.lineEdit_filename4.setText(self.files[3])
+        self.lineEdit_filename5.setText(self.files[4])
+        self.lineEdit_filename6.setText(self.files[5])
+
+        self.pushButton_color1.setStyleSheet("background-color: {}".format(self.chart_properties[0].color))
+        self.pushButton_color2.setStyleSheet("background-color: {}".format(self.chart_properties[1].color))
+        self.pushButton_color3.setStyleSheet("background-color: {}".format(self.chart_properties[2].color))
+        self.pushButton_color4.setStyleSheet("background-color: {}".format(self.chart_properties[3].color))
+        self.pushButton_color5.setStyleSheet("background-color: {}".format(self.chart_properties[4].color))
+        self.pushButton_color6.setStyleSheet("background-color: {}".format(self.chart_properties[5].color))
+        self.spinBox_thickness1.setValue(self.chart_properties[0].line_thick)
+        self.spinBox_thickness2.setValue(self.chart_properties[1].line_thick)
+        self.spinBox_thickness3.setValue(self.chart_properties[2].line_thick)
+        self.spinBox_thickness4.setValue(self.chart_properties[3].line_thick)
+        self.spinBox_thickness5.setValue(self.chart_properties[4].line_thick)
+        self.spinBox_thickness6.setValue(self.chart_properties[5].line_thick)
 
     def plot_chart(self):
         chart = pg.PlotWidget(background=pg.mkColor('w'))
@@ -108,7 +135,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             chrt = chart.plot(
                 x=self.freq_values,
                 y=y_value,
-                pen=pg.mkPen(self.get_color_by_int(i), width=2),
+                pen=self.get_pen_by_int(i),
                 name='chart {}'.format(i),
             )
             i = 0
@@ -120,8 +147,23 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.dialog.show()
         i = 0;
 
-    def get_color_by_int(self, color_int):
-        return self.chart_properties[color_int].color
+    def get_pen_by_int(self, chart_num):
+        return pg.mkPen(
+            self.chart_properties[chart_num].color,
+            width=self.chart_properties[chart_num].line_thick,
+            style=self.chart_properties[chart_num].type,
+        )
+
+    def to_json(self):
+        data = {}
+        data['files'] = self.files
+        data['chart_properties'] = [i.__dict__ for i in self.chart_properties]
+        data['impedance'] = self.impedance
+        data['main_geometry'] = self.geometry().getRect()
+        data['child_geometry'] = self.dialog.geometry().getRect()
+
+        with open('data.txt', 'w') as outfile:
+            json.dump(data, outfile, indent=4)
     # -------------------------------------- CLASS METHODS ----------------------#
     @classmethod
     def read_data_file(cls, filename):
@@ -190,12 +232,32 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         return freqs, zx
 
-
     def browse_folder(self):
         return QtWidgets.QFileDialog.getOpenFileName(self, 'Выберите файл')[0]
 
 
-#-------------------------------------- EVENT HANDLERS ----------------------#
+# -------------------------------------- EVENT HANDLERS ----------------------#
+
+    def spinBox_thickness1_valueChanged(self):
+        self.chart_properties[0].line_thick = int(self.spinBox_thickness1.value())
+
+    def spinBox_thickness2_valueChanged(self):
+        self.chart_properties[1].line_thick = int(self.spinBox_thickness2.value())
+
+    def spinBox_thickness3_valueChanged(self):
+        self.chart_properties[2].line_thick = int(self.spinBox_thickness3.value())
+
+    def spinBox_thickness4_valueChanged(self):
+        self.chart_properties[3].line_thick = int(self.spinBox_thickness4.value())
+
+    def spinBox_thickness5_valueChanged(self):
+        self.chart_properties[4].line_thick = int(self.spinBox_thickness5.value())
+
+    def spinBox_thickness6_valueChanged(self):
+        self.chart_properties[5].line_thick = int(self.spinBox_thickness6.value())
+
+    def spinBox_impedance_valueChanged(self):
+        self.impedance = int(self.spinBox_impedance.value())
 
     def onclick_open_file1(self):
         self.files[0] = self.browse_folder()
@@ -253,7 +315,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
 
     def calc_Rx1_re_data(self):
-        self.freq_values, zx =  MainApp.calc_Rx(1, self.files, 50)
+        self.freq_values, zx =  MainApp.calc_Rx(1, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.real)
@@ -264,7 +326,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.plot_chart()
 
     def calc_Rx1_im_data(self):
-        self.freq_values, zx =  MainApp.calc_Rx(1, self.files, 50)
+        self.freq_values, zx =  MainApp.calc_Rx(1, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.imag)
@@ -275,7 +337,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.plot_chart()
 
     def calc_Rx2_re_data(self):
-        self.freq_values, zx =  MainApp.calc_Rx(2, self.files, 50)
+        self.freq_values, zx =  MainApp.calc_Rx(2, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.real)
@@ -284,7 +346,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.plot_chart()
 
     def calc_Rx2_im_data(self):
-        self.freq_values, zx =  MainApp.calc_Rx(2, self.files, 50)
+        self.freq_values, zx =  MainApp.calc_Rx(2, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.imag)
@@ -327,8 +389,9 @@ def main():
     app = QtWidgets.QApplication(sys.argv)
     window = MainApp()
     window.show()
-    app.exec_()
 
+    app.exec_()
+    window.to_json()
 
 
 if __name__ == '__main__':

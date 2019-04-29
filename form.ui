@@ -40,7 +40,7 @@
      <item>
       <widget class="QPushButton" name="openButton">
        <property name="text">
-        <string>Open file</string>
+        <string>Сохранить в Word</string>
        </property>
       </widget>
      </item>

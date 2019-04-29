@@ -22,10 +22,11 @@ class Ui_Dialog(object):
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.spinBox_impedance = QtWidgets.QSpinBox(self.tab)
-        self.spinBox_impedance.setGeometry(QtCore.QRect(60, 340, 51, 31))
+        self.spinBox_impedance.setGeometry(QtCore.QRect(60, 340, 71, 31))
         font = QtGui.QFont()
         font.setPointSize(12)
         self.spinBox_impedance.setFont(font)
+        self.spinBox_impedance.setMaximum(999)
         self.spinBox_impedance.setObjectName("spinBox_impedance")
         self.label_7 = QtWidgets.QLabel(self.tab)
         self.label_7.setGeometry(QtCore.QRect(60, 320, 141, 21))
@@ -489,7 +490,7 @@ class Ui_Dialog(object):
         self.verticalLayout.addWidget(self.tabWidget)
 
         self.retranslateUi(Dialog)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
