@@ -42,6 +42,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         self.files = json_data['files']
         self.impedance = json_data['impedance']
+        self.files_to_plot = json_data['files_to_plot']
         self.chart_properties = []
         for prop in json_data['chart_properties']:
             self.chart_properties.append(chart_prop(
@@ -58,6 +59,13 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.set_init_values_to_controls()
 
         # ----------- ПОДПИСЬ ОБРАБОТЧИКОВ СОБЫТИЙ --------------- #
+        self.checkBox_filePlot1.stateChanged.connect(self.set_files_to_plot)
+        self.checkBox_filePlot2.stateChanged.connect(self.set_files_to_plot)
+        self.checkBox_filePlot3.stateChanged.connect(self.set_files_to_plot)
+        self.checkBox_filePlot4.stateChanged.connect(self.set_files_to_plot)
+        self.checkBox_filePlot5.stateChanged.connect(self.set_files_to_plot)
+        self.checkBox_filePlot6.stateChanged.connect(self.set_files_to_plot)
+
         self.pushButton_open_file1.clicked.connect(self.onclick_open_file1)
         self.pushButton_open_file2.clicked.connect(self.onclick_open_file2)
         self.pushButton_open_file3.clicked.connect(self.onclick_open_file3)
@@ -113,6 +121,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.pushButton_color4.setStyleSheet("background-color: {}".format(self.chart_properties[3].color))
         self.pushButton_color5.setStyleSheet("background-color: {}".format(self.chart_properties[4].color))
         self.pushButton_color6.setStyleSheet("background-color: {}".format(self.chart_properties[5].color))
+
         self.spinBox_thickness1.setValue(self.chart_properties[0].line_thick)
         self.spinBox_thickness2.setValue(self.chart_properties[1].line_thick)
         self.spinBox_thickness3.setValue(self.chart_properties[2].line_thick)
@@ -120,30 +129,89 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.spinBox_thickness5.setValue(self.chart_properties[4].line_thick)
         self.spinBox_thickness6.setValue(self.chart_properties[5].line_thick)
 
-    def plot_chart(self):
-        chart = pg.PlotWidget(background=pg.mkColor('w'))
-        chart.addLegend(offset=(600, 30))
+        self.checkBox_filePlot1.setCheckState(self.files_to_plot[0])
+        self.checkBox_filePlot2.setCheckState(self.files_to_plot[1])
+        self.checkBox_filePlot3.setCheckState(self.files_to_plot[2])
+        self.checkBox_filePlot4.setCheckState(self.files_to_plot[3])
+        self.checkBox_filePlot5.setCheckState(self.files_to_plot[4])
+        self.checkBox_filePlot6.setCheckState(self.files_to_plot[5])
 
-        chart.getPlotItem().axes['left']['item'].setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
-        chart.getPlotItem().axes['left']['item'].setGrid(255)
-        chart.getPlotItem().axes['bottom']['item'].setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
-        chart.getPlotItem().axes['bottom']['item'].setGrid(255)
-        chart.plotItem.axes['bottom']['item'].setLabel('Частота', units='МГц')
-        chart.plotItem.axes['bottom']['item'].labelStyle = {'font-size': '14pt'}
+    def get_files_to_plot(self):
+        files_to_plots = [
+            self.checkBox_filePlot1.isChecked(),
+            self.checkBox_filePlot2.isChecked(),
+            self.checkBox_filePlot3.isChecked(),
+            self.checkBox_filePlot4.isChecked(),
+            self.checkBox_filePlot5.isChecked(),
+            self.checkBox_filePlot6.isChecked(),
+        ]
+        return files_to_plots
+
+    def set_files_to_plot(self):
+        self.files_to_plot = self.get_files_to_plot()
+
+    def plot_chart(self):
+        chart_pw = pg.PlotWidget(background=pg.mkColor('w'))
+        chart_pw.addLegend(offset=(600, 30))
+
+        chart_pw.getPlotItem().axes['left']['item'].setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
+        chart_pw.getPlotItem().axes['left']['item'].setGrid(255)
+        chart_pw.getPlotItem().axes['bottom']['item'].setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
+        chart_pw.getPlotItem().axes['bottom']['item'].setGrid(255)
+        chart_pw.plotItem.axes['bottom']['item'].setLabel('Частота', units='МГц')
+        chart_pw.plotItem.axes['bottom']['item'].labelStyle = {'font-size': '14pt'}
         # symbol = in ['o', 's', 't', 't1', 't2', 't3','d', '+', 'x', 'p', 'h', 'star']
+        files_to_plots = self.get_files_to_plot()
+        # for i, y_value in enumerate(self.y_values):
+        #     if i == 0:
+        #         chrt = chart_pw.plot(
+        #             x=self.freq_values[i],
+        #             y=y_value,
+        #             pen=self.get_pen_by_int(i),
+        #             name='chart {}'.format(i),
+        #         )
+        #     else:
+        #         chrt.addItem(pg.PlotCurveItem(
+        #             x=self.freq_values[i],
+        #             y=y_value,
+        #             pen=self.get_pen_by_int(i),
+        #             name='chart {}'.format(i),
+        #         ))
+        p1 = chart_pw.plotItem
+        p1.plot()
         for i, y_value in enumerate(self.y_values):
-            chrt = chart.plot(
-                x=self.freq_values,
+
+            p1.addItem(pg.PlotCurveItem(
+                x=self.freq_values[i],
                 y=y_value,
                 pen=self.get_pen_by_int(i),
                 name='chart {}'.format(i),
-            )
-            i = 0
+            ))
+        # p1.plot(
+        #     x=self.freq_values[0],
+        #     y=self.y_values[0],
+        #     pen=self.get_pen_by_int(0),
+        #     name='chart {}'.format(0),
+        # )
+        # p1.addItem(pg.PlotCurveItem(
+        #     x=self.freq_values[0],
+        #     y=self.y_values[0],
+        #     pen=self.get_pen_by_int(0),
+        #     name='chart {}'.format(0),
+        # ))
+        # p1.addItem(pg.PlotCurveItem(
+        #     x=self.freq_values[1],
+        #     y=self.y_values[1],
+        #     pen=self.get_pen_by_int(1),
+        #     name='chart {}'.format(1),
+        # ))
+                # p1.addItem(pg.PlotCurveItem([10, 20, 40, 80, 40, 20], pen='b'))
+
 
         # chart.plotItem.legend.offset = (100, 100)
 
         # chart_form.show()
-        self.dialog.plot_chart(chart)
+        self.dialog.plot_chart(chart_pw)
         self.dialog.show()
         i = 0;
 
@@ -161,23 +229,36 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         data['impedance'] = self.impedance
         data['main_geometry'] = self.geometry().getRect()
         data['child_geometry'] = self.dialog.geometry().getRect()
+        data['files_to_plot'] = self.get_files_to_plot()
 
         with open('data.txt', 'w') as outfile:
             json.dump(data, outfile, indent=4)
     # -------------------------------------- CLASS METHODS ----------------------#
-    @classmethod
-    def read_data_file(cls, filename):
-        data = {}
-        with open(filename) as file:
-            content = file.readlines()
 
-        content = content[5:]
+    def read_data_file(self, filename):
+        data = {}
+
+        try:
+            with open(filename) as file:
+                content = file.readlines()
+        except FileNotFoundError:
+            print('No such file (read_data_file funct)')
+            return np.asarray([]).astype(np.float), np.asarray([]).astype(np.float)
+
+        if content:
+            content = content[5:]
+        else:
+            return np.asarray([]).astype(np.float), np.asarray([]).astype(np.float)
 
         for line in content:
             line = line.split()
             if len(line) == 9:  # case for s2p
                 f, *values = line
                 data[float(f) / 10 ** 6] = list(map(float, values))
+            if len(line) == 3:  # case for s1p
+                f, *values = line
+                data[float(f) / 10 ** 6] = list(map(float, values))
+
 
         data = collections.OrderedDict(sorted(data.items()))
         freq_values = list(data.keys())
@@ -187,24 +268,24 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         return freq_values, values_correct_format
 
 
-    @classmethod
-    def get_data_values(cls, column_number, data_files):
+    def get_data_values(self, column_number, data_files):
         freq_values_out = []
         values = []
-        for data_file in data_files:
-            freq_values,  values_correct_format = MainApp.read_data_file(data_file)
-            if not type(freq_values_out) is np.ndarray:
-                freq_values_out = freq_values
-            values.append(values_correct_format[:, column_number])
+        for i, data_file in enumerate(data_files):
+            if self.files_to_plot[i]:
+                freq_values,  values_correct_format = self.read_data_file(data_file)
+                if not freq_values.any() and not values_correct_format.any():
+                    continue
+                freq_values_out.append(freq_values)
+                values.append(values_correct_format[:, column_number])
         return freq_values_out, values
 
-    @classmethod
-    def calc_VSWR(cls, port_number, data_files):
+    def calc_VSWR(self, port_number, data_files):
 
         if port_number == 2:
-            freqs, values =  MainApp.get_data_values(6, data_files)  # abs(S22)
+            freqs, values =  self.get_data_values(6, data_files)  # abs(S22)
         else:
-            freqs, values = MainApp.get_data_values(0, data_files)  # abs(S11)
+            freqs, values = self.get_data_values(0, data_files)  # abs(S11)
 
         vswr = []
         for value in values:
@@ -212,15 +293,14 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         return freqs, vswr
 
-    @classmethod
-    def calc_Rx(cls, port_number, data_files, z0):
+    def calc_Rx(self, port_number, data_files, z0):
 
         if port_number == 2:
-            freqs, values_abs =  MainApp.get_data_values(6, data_files)  # abs(S22)
-            _, values_ang = MainApp.get_data_values(7, data_files)  # abs(S22)
+            freqs, values_abs =  self.get_data_values(6, data_files)  # abs(S22)
+            _, values_ang = self.get_data_values(7, data_files)  # abs(S22)
         else:
-            freqs, values_abs =  MainApp.get_data_values(0, data_files)  # abs(S22)
-            _, values_ang = MainApp.get_data_values(1, data_files)  # abs(S22)
+            freqs, values_abs = self.get_data_values(0, data_files)  # abs(S22)
+            _, values_ang = self.get_data_values(1, data_files)  # abs(S22)
 
         zx = []
         nprect = np.vectorize(rect)
@@ -237,6 +317,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
 
 # -------------------------------------- EVENT HANDLERS ----------------------#
+#     def checkbox1_state_changed(self):
+#         self.files_to_plot = self.get_files_to_plot()
 
     def spinBox_thickness1_valueChanged(self):
         self.chart_properties[0].line_thick = int(self.spinBox_thickness1.value())
@@ -315,7 +397,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
 
     def calc_Rx1_re_data(self):
-        self.freq_values, zx =  MainApp.calc_Rx(1, self.files, self.impedance)
+        self.freq_values, zx =  self.calc_Rx(1, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.real)
@@ -326,7 +408,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.plot_chart()
 
     def calc_Rx1_im_data(self):
-        self.freq_values, zx =  MainApp.calc_Rx(1, self.files, self.impedance)
+        self.freq_values, zx =  self.calc_Rx(1, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.imag)
@@ -337,7 +419,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.plot_chart()
 
     def calc_Rx2_re_data(self):
-        self.freq_values, zx =  MainApp.calc_Rx(2, self.files, self.impedance)
+        self.freq_values, zx =  self.calc_Rx(2, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.real)
@@ -346,7 +428,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.plot_chart()
 
     def calc_Rx2_im_data(self):
-        self.freq_values, zx =  MainApp.calc_Rx(2, self.files, self.impedance)
+        self.freq_values, zx =  self.calc_Rx(2, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.imag)
@@ -357,31 +439,31 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.plot_chart()
 
     def calc_VSWR1_data(self):
-        self.freq_values, self.y_values =  MainApp.calc_VSWR(1, self.files)
+        self.freq_values, self.y_values =  self.calc_VSWR(1, self.files)
         self.plot_chart()
 
     def calc_VSWR2_data(self):
-        self.freq_values, self.y_values = MainApp.calc_VSWR(2, self.files)
+        self.freq_values, self.y_values = self.calc_VSWR(2, self.files)
         self.plot_chart()
 
     def calc_s11_data(self):
         self.y_values = []
-        self.freq_values, self.y_values = MainApp.get_data_values(0, self.files)
+        self.freq_values, self.y_values = self.get_data_values(0, self.files)
         self.plot_chart()
 
     def calc_s12_data(self):
         self.y_values = []
-        self.freq_values, self.y_values = MainApp.get_data_values(2, self.files)
+        self.freq_values, self.y_values = self.get_data_values(2, self.files)
         self.plot_chart()
 
     def calc_s21_data(self):
         self.y_values = []
-        self.freq_values, self.y_values = MainApp.get_data_values(4, self.files)
+        self.freq_values, self.y_values = self.get_data_values(4, self.files)
         self.plot_chart()
 
     def calc_s22_data(self):
         self.y_values = []
-        self.freq_values, self.y_values = MainApp.get_data_values(6, self.files)
+        self.freq_values, self.y_values = self.get_data_values(6, self.files)
         self.plot_chart()
 
 
