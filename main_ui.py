@@ -11,6 +11,8 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QColorDialog
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
+#from pytest import collect
+
 import PGQ_image_exporter # modified pyqtgraph Exporter!
 import numpy as np
 import ui
@@ -160,57 +162,17 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         chart_pw.getPlotItem().axes['bottom']['item'].setGrid(255)
         chart_pw.plotItem.axes['bottom']['item'].setLabel('Частота', units='МГц')
         chart_pw.plotItem.axes['bottom']['item'].labelStyle = {'font-size': '14pt'}
-        # symbol = in ['o', 's', 't', 't1', 't2', 't3','d', '+', 'x', 'p', 'h', 'star']
-        files_to_plots = self.get_files_to_plot()
-        # for i, y_value in enumerate(self.y_values):
-        #     if i == 0:
-        #         chrt = chart_pw.plot(
-        #             x=self.freq_values[i],
-        #             y=y_value,
-        #             pen=self.get_pen_by_int(i),
-        #             name='chart {}'.format(i),
-        #         )
-        #     else:
-        #         chrt.addItem(pg.PlotCurveItem(
-        #             x=self.freq_values[i],
-        #             y=y_value,
-        #             pen=self.get_pen_by_int(i),
-        #             name='chart {}'.format(i),
-        #         ))
+
         p1 = chart_pw.plotItem
         p1.plot()
         for i, y_value in enumerate(self.y_values):
-
             p1.addItem(pg.PlotCurveItem(
                 x=self.freq_values[i],
                 y=y_value,
                 pen=self.get_pen_by_int(i),
                 name='chart {}'.format(i),
             ))
-        # p1.plot(
-        #     x=self.freq_values[0],
-        #     y=self.y_values[0],
-        #     pen=self.get_pen_by_int(0),
-        #     name='chart {}'.format(0),
-        # )
-        # p1.addItem(pg.PlotCurveItem(
-        #     x=self.freq_values[0],
-        #     y=self.y_values[0],
-        #     pen=self.get_pen_by_int(0),
-        #     name='chart {}'.format(0),
-        # ))
-        # p1.addItem(pg.PlotCurveItem(
-        #     x=self.freq_values[1],
-        #     y=self.y_values[1],
-        #     pen=self.get_pen_by_int(1),
-        #     name='chart {}'.format(1),
-        # ))
-                # p1.addItem(pg.PlotCurveItem([10, 20, 40, 80, 40, 20], pen='b'))
 
-
-        # chart.plotItem.legend.offset = (100, 100)
-
-        # chart_form.show()
         self.dialog.plot_chart(chart_pw)
         self.dialog.show()
         i = 0;
@@ -276,8 +238,9 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
                 freq_values,  values_correct_format = self.read_data_file(data_file)
                 if not freq_values.any() and not values_correct_format.any():
                     continue
-                freq_values_out.append(freq_values)
-                values.append(values_correct_format[:, column_number])
+                if column_number <= values_correct_format.shape[1] - 1:
+                    freq_values_out.append(freq_values)
+                    values.append(values_correct_format[:, column_number])
         return freq_values_out, values
 
     def calc_VSWR(self, port_number, data_files):
