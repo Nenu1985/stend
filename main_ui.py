@@ -139,6 +139,10 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.checkBox_filePlot6.setCheckState(self.files_to_plot[5])
 
     def get_files_to_plot(self):
+        """
+        Check checkboxes for plotting file
+        :return: list of boolean values
+        """
         files_to_plots = [
             self.checkBox_filePlot1.isChecked(),
             self.checkBox_filePlot2.isChecked(),
@@ -174,9 +178,14 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             ))
 
         self.dialog.plot_chart(chart_pw)
-        self.dialog.files_names = self.files
+
+        file_name_list_to_dialog = []
+        for i, file in enumerate(self.files):
+            if self.get_files_to_plot()[i]:
+                file_name_list_to_dialog.append(file)
+        self.dialog.files_names = file_name_list_to_dialog
         self.dialog.show()
-        i = 0;
+
 
     def get_pen_by_int(self, chart_num):
         return pg.mkPen(
