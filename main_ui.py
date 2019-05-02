@@ -174,6 +174,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             ))
 
         self.dialog.plot_chart(chart_pw)
+        self.dialog.files_names = self.files
         self.dialog.show()
         i = 0;
 
