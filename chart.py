@@ -87,7 +87,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.widget = chart
         # chart.plotItem.items[0]
         # self.horizontalLayout.widget = chart
-        if self.horizontalLayout.count() > 0:
+        while self.horizontalLayout.count() > 0:
             self.horizontalLayout.takeAt(0)
         self.horizontalLayout.addWidget(chart)
 

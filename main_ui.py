@@ -108,6 +108,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         # при нажатии кнопки
 
     def set_init_values_to_controls(self):
+        self.dialog.setWindowTitle('График')
+        self.setWindowTitle('Входные характеристики')
         self.spinBox_impedance.setValue(self.impedance)
 
         self.lineEdit_filename1.setText(self.files[0])
@@ -427,11 +429,13 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def calc_s12_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(2, self.files)
+        self.y_values = 20 * np.log10(self.y_values)
         self.plot_chart()
 
     def calc_s21_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(4, self.files)
+        self.y_values = 20 * np.log10(self.y_values)
         self.plot_chart()
 
     def calc_s22_data(self):
