@@ -1081,7 +1081,7 @@
             </font>
            </property>
            <property name="text">
-            <string>VSWR1</string>
+            <string>КСВН_1</string>
            </property>
           </widget>
          </item>
@@ -1095,7 +1095,7 @@
             </font>
            </property>
            <property name="text">
-            <string>VSWR2</string>
+            <string>КСВН_2</string>
            </property>
           </widget>
          </item>

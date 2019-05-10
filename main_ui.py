@@ -3,11 +3,11 @@
 #
 # RUN:
 # pyinstaller --hidden-import python-docx --hidden-import pyqtgraph --onefile main_ui.py
-
+import functools
 import sys
 import collections
 import json
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QColorDialog
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
@@ -18,7 +18,7 @@ import numpy as np
 import ui
 import form
 from cmath import rect
-from chart import Chart
+from chart import Chart, CustomViewBox
 from chart_properties import ChartProperties as chart_prop
 # from PyQt4 import QtCore, QtGuif
 
@@ -45,6 +45,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.files = json_data['files']
         self.impedance = json_data['impedance']
         self.files_to_plot = json_data['files_to_plot']
+        self.chart_legend_offset = json_data.get('chart_legend_offset', (600, 30))
+
         self.chart_properties = []
         for prop in json_data['chart_properties']:
             self.chart_properties.append(chart_prop(
@@ -109,6 +111,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
     def set_init_values_to_controls(self):
         self.dialog.setWindowTitle('График')
+
         self.setWindowTitle('Входные характеристики')
         self.spinBox_impedance.setValue(self.impedance)
 
@@ -158,28 +161,79 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def set_files_to_plot(self):
         self.files_to_plot = self.get_files_to_plot()
 
-    def plot_chart(self):
-        chart_pw = pg.PlotWidget(background=pg.mkColor('w'))
-        chart_pw.addLegend(offset=(600, 30))
+    def plot_chart(self, title):
+        vb = CustomViewBox()
+        layout = pg.GraphicsLayout()
+        layout.layout.setSpacing(150.)
+        layout.setContentsMargins(0., 0., 0., 0.)
+        # layout.addViewBox(0,0)
+        view = pg.GraphicsView(background=pg.mkColor('w'))
+        view.setCentralItem(layout)
 
-        chart_pw.getPlotItem().axes['left']['item'].setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
-        chart_pw.getPlotItem().axes['left']['item'].setGrid(255)
-        chart_pw.getPlotItem().axes['bottom']['item'].setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
-        chart_pw.getPlotItem().axes['bottom']['item'].setGrid(255)
-        chart_pw.plotItem.axes['bottom']['item'].setLabel('Частота', units='МГц')
-        chart_pw.plotItem.axes['bottom']['item'].labelStyle = {'font-size': '14pt'}
+        chart_pw = layout.addPlot(0, 0, enableMenu=False, viewBox=vb)
+        # legend = layout.addLabel('_________________',0,1)
 
-        p1 = chart_pw.plotItem
-        p1.plot()
+
+        bottom_axes = chart_pw.getAxis('bottom')
+        left_axes = chart_pw.getAxis('left')
+        right_axes = chart_pw.getAxis('right')
+        top_axes = chart_pw.getAxis('top')
+
+
+        layout.addItem(chart_pw.addLegend(size=(200,100), offset=(1380, 10)), 0, 1)
+
+        left_axes.setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
+        left_axes.setLabel('----->')
+
+        chart_pw.getAxis('left').setGrid(150)
+        bottom_axes.setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
+        bottom_axes.setGrid(150)
+        bottom_axes.setLabel('Частота', units='МГц')
+
+        top_axes.show()
+        top_axes.setPen(pg.mkPen('k'))
+        top_axes.setTicks([])
+
+        right_axes.setLabel('   ', color='#fff')
+        right_axes.setPen(pg.mkPen('k'))
+        right_axes.setTicks([])
+        right_axes.show()
+        # chart_pw.showAxis('right')
+        # results_graph(PlotWidget).setLabels(left="Frequency", bottom="Scores")
+        bottom_axes.labelStyle = {'font-size': '20pt', 'color': '#000'}
+
+        tick_font = QFont()
+        tick_font.setPixelSize(20)
+        axis_style = {
+            'tickFont': tick_font,
+            'tickLength': 10,
+            'tickTextOffset': 15,
+            'tickTextHeight': 20,
+            'tickTextWidth': 20,
+            # 'stopAxisAtTick': (False, False),
+        }
+
+        bottom_axes.setTickFont(tick_font)
+        left_axes.setTickFont(tick_font)
+
+        bottom_axes.setStyle(**axis_style)
+        left_axes.setStyle(**axis_style)
+
+        # chart_pw.setBorder('k', width=2)
+        p1 = chart_pw
+        p1.plot(border=pg.mkPen('k',width=2))
+        p1.setTitle(title, **{'color': '#000', 'size': '14pt'})
         for i, y_value in enumerate(self.y_values):
             p1.addItem(pg.PlotCurveItem(
                 x=self.freq_values[i],
                 y=y_value,
                 pen=self.get_pen_by_int(i),
-                name='chart {}'.format(i),
+                name='график {}'.format(i),
+                # ignoreBounds=True,
             ))
 
-        self.dialog.plot_chart(chart_pw)
+        # self.enableCrossHairs(chart_pw)
+        self.dialog.plot_chart(view, chart_pw)
 
         file_name_list_to_dialog = []
         for i, file in enumerate(self.files):
@@ -204,6 +258,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         data['main_geometry'] = self.geometry().getRect()
         data['child_geometry'] = self.dialog.geometry().getRect()
         data['files_to_plot'] = self.get_files_to_plot()
+        # data['chart_legend_offset'] = self.dialog.widget.plotItem.legend.offset
 
         with open('data.txt', 'w') as outfile:
             json.dump(data, outfile, indent=4)
@@ -255,7 +310,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
                     values.append(values_correct_format[:, column_number])
         return freq_values_out, values
 
-    def calc_VSWR(self, port_number, data_files):
+    def calc_vswr(self, port_number, data_files):
 
         if port_number == 2:
             freqs, values =  self.get_data_values(6, data_files)  # abs(S22)
@@ -268,7 +323,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         return freqs, vswr
 
-    def calc_Rx(self, port_number, data_files, z0):
+    def calc_rx(self, port_number, data_files, z0):
 
         if port_number == 2:
             freqs, values_abs =  self.get_data_values(6, data_files)  # abs(S22)
@@ -292,8 +347,32 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
 
 # -------------------------------------- EVENT HANDLERS ----------------------#
-#     def checkbox1_state_changed(self):
-#         self.files_to_plot = self.get_files_to_plot()
+    def enableCrossHairs(self, plot, curves=[]):
+        """
+        Enables crosshairs on the specified plot
+
+        .. tabularcolumns:: |p{3cm}|p{11cm}|
+
+        ===============  ============================================================================================
+        **Arguments**
+        ===============  ============================================================================================
+        plot             The plot to activate this feature on
+        ===============  ============================================================================================
+        """
+
+        plot.setTitle('')
+        vLine = pg.InfiniteLine(angle=90, movable=False, pen=[100, 100, 200, 200])
+        plot.addItem(vLine, ignoreBounds=True)
+        hLine = pg.InfiniteLine(angle=0, movable=False, pen=[100, 100, 200, 200])
+        plot.addItem(hLine, ignoreBounds=True)
+        plot.hLine = hLine;
+        plot.vLine = vLine
+
+        crossHairPartial = functools.partial(self.crossHairEvent, plot)
+        proxy = pg.SignalProxy(plot.scene().sigMouseClicked, rateLimit=60, slot=crossHairPartial)
+        plot.proxy = proxy
+        plot.mousePoint = None
+
 
     def spinBox_thickness1_valueChanged(self):
         self.chart_properties[0].line_thick = int(self.spinBox_thickness1.value())
@@ -372,7 +451,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
 
     def calc_Rx1_re_data(self):
-        self.freq_values, zx =  self.calc_Rx(1, self.files, self.impedance)
+        self.freq_values, zx =  self.calc_rx(1, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.real)
@@ -380,10 +459,10 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         # self.y_values.append(zx[0].real)
         # self.y_values.append(zx[0].imag)
 
-        self.plot_chart()
+        self.plot_chart('Rx 1 порт real')
 
     def calc_Rx1_im_data(self):
-        self.freq_values, zx =  self.calc_Rx(1, self.files, self.impedance)
+        self.freq_values, zx =  self.calc_rx(1, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.imag)
@@ -391,19 +470,19 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         # self.y_values.append(zx[0].real)
         # self.y_values.append(zx[0].imag)
 
-        self.plot_chart()
+        self.plot_chart('Rx 1 порт imag')
 
     def calc_Rx2_re_data(self):
-        self.freq_values, zx =  self.calc_Rx(2, self.files, self.impedance)
+        self.freq_values, zx =  self.calc_rx(2, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.real)
         self.y_values = values_to_plot
 
-        self.plot_chart()
+        self.plot_chart('Rx 2 порт real')
 
     def calc_Rx2_im_data(self):
-        self.freq_values, zx =  self.calc_Rx(2, self.files, self.impedance)
+        self.freq_values, zx =  self.calc_rx(2, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.imag)
@@ -411,37 +490,37 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         # self.y_values.append(zx[0].real)
         # self.y_values.append(zx[0].imag)
 
-        self.plot_chart()
+        self.plot_chart('Rx 2 порт imag')
 
     def calc_VSWR1_data(self):
-        self.freq_values, self.y_values =  self.calc_VSWR(1, self.files)
-        self.plot_chart()
+        self.freq_values, self.y_values =  self.calc_vswr(1, self.files)
+        self.plot_chart('КСВН 1 порт')
 
     def calc_VSWR2_data(self):
-        self.freq_values, self.y_values = self.calc_VSWR(2, self.files)
-        self.plot_chart()
+        self.freq_values, self.y_values = self.calc_vswr(2, self.files)
+        self.plot_chart('КСВН 2 порт')
 
     def calc_s11_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(0, self.files)
-        self.plot_chart()
+        self.plot_chart('S11')
 
     def calc_s12_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(2, self.files)
         self.y_values = 20 * np.log10(self.y_values)
-        self.plot_chart()
+        self.plot_chart('S12')
 
     def calc_s21_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(4, self.files)
         self.y_values = 20 * np.log10(self.y_values)
-        self.plot_chart()
+        self.plot_chart('S21')
 
     def calc_s22_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(6, self.files)
-        self.plot_chart()
+        self.plot_chart('S22')
 
 
 def main():
