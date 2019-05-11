@@ -16,20 +16,28 @@ import cv2
 
 
 class CustomViewBox(pg.ViewBox):
-    def __init__(self, *args, **kwds):
+    def __init__(self, parent_chart_dialog, *args, **kwds):
         pg.ViewBox.__init__(self, *args, **kwds)
         self.setMouseMode(self.RectMode)
-
+        self.chart = parent_chart_dialog
     ## reimplement right-click to zoom out
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
             self.autoRange()
+            self.chart.spinBox_x_max_valueChanged()
+            self.chart.doubleSpinBox_y_max_valueChanged()
+
 
     def mouseDragEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
             ev.ignore()
         else:
             pg.ViewBox.mouseDragEvent(self, ev)
+
+    def wheelEvent(self, ev, axis=None):
+        ev.ignore()
+
+
 
 class Chart(QtWidgets.QDialog, form.Ui_Dialog):
 
@@ -47,6 +55,8 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.doubleSpinBox_y_max.valueChanged.connect(self.doubleSpinBox_y_max_valueChanged)
         self.doubleSpinBox_y_min.valueChanged.connect(self.doubleSpinBox_y_max_valueChanged)
 
+    def plot_chart_init(self):
+        pass
     def plot_to_word(self):
         FILE_EXIST_FILE = False
         # create an exporter instance, as an argument give it
@@ -130,16 +140,18 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
     def grid_range_settings_x(self, values_range):
         start = values_range[0]
         end = values_range[1]
-        dx = int((end-start)/10)
-        delta = [(value, str(value)) for value in list(range(start, end+dx, dx))]
+        dx = int((end-start)/8)
+        delta = [(value, str(value)) for value in list(range(start, end-dx, dx))]
+        delta.append((end, str(end)))
         ax = self.chart.getAxis('bottom')
         ax.setTicks([delta, []])
 
     def grid_range_settings_y(self, values_range):
         start = values_range[0]
         end = values_range[1]
-        dy = (end-start)/10
-        delta = [(value, '{0:.2g}'.format(value)) for value in list(drange(start, end+dy, dy))]
+        dy = (end-start)/6
+        delta = [(value, '{0:.2g}'.format(value)) for value in list(drange(start, end, dy))]
+        delta.append((end, '{0:.2g}'.format(end)))
         ay = self.chart.getAxis('left')
         ay.setTicks([delta, []])
 

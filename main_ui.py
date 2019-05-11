@@ -46,7 +46,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.impedance = json_data['impedance']
         self.files_to_plot = json_data['files_to_plot']
         self.chart_legend_offset = json_data.get('chart_legend_offset', (600, 30))
-
+        self.title = 'График'
         self.chart_properties = []
         for prop in json_data['chart_properties']:
             self.chart_properties.append(chart_prop(
@@ -161,41 +161,40 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def set_files_to_plot(self):
         self.files_to_plot = self.get_files_to_plot()
 
-    def plot_chart(self, title):
-        vb = CustomViewBox()
+    def plot_chart(self):
+        # self.plot_chart_init()
+        vb = CustomViewBox(self.dialog)
         layout = pg.GraphicsLayout()
         layout.layout.setSpacing(150.)
         layout.setContentsMargins(0., 0., 0., 0.)
         # layout.addViewBox(0,0)
-        view = pg.GraphicsView(background=pg.mkColor('w'))
-        view.setCentralItem(layout)
+        graphics_view = pg.GraphicsView(background=pg.mkColor('w'))
+        graphics_view.setCentralItem(layout)
 
-        chart_pw = layout.addPlot(0, 0, enableMenu=False, viewBox=vb)
+        chart_plot_item = layout.addPlot(0, 0, enableMenu=False, viewBox=vb)
         # legend = layout.addLabel('_________________',0,1)
 
+        bottom_axes = chart_plot_item.getAxis('bottom')
+        left_axes = chart_plot_item.getAxis('left')
+        right_axes = chart_plot_item.getAxis('right')
+        top_axes = chart_plot_item.getAxis('top')
 
-        bottom_axes = chart_pw.getAxis('bottom')
-        left_axes = chart_pw.getAxis('left')
-        right_axes = chart_pw.getAxis('right')
-        top_axes = chart_pw.getAxis('top')
-
-
-        layout.addItem(chart_pw.addLegend(size=(200,100), offset=(1380, 10)), 0, 1)
+        layout.addItem(chart_plot_item.addLegend(size=(200,100), offset=(1380, 10)), 0, 1)
 
         left_axes.setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
         left_axes.setLabel('----->')
 
-        chart_pw.getAxis('left').setGrid(150)
+        chart_plot_item.getAxis('left').setGrid(150)
         bottom_axes.setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
         bottom_axes.setGrid(150)
         bottom_axes.setLabel('Частота', units='МГц')
 
         top_axes.show()
-        top_axes.setPen(pg.mkPen('k'))
+        top_axes.setPen(pg.mkPen('k', width=2))
         top_axes.setTicks([])
 
         right_axes.setLabel('   ', color='#fff')
-        right_axes.setPen(pg.mkPen('k'))
+        right_axes.setPen(pg.mkPen('k', width=2))
         right_axes.setTicks([])
         right_axes.show()
         # chart_pw.showAxis('right')
@@ -220,11 +219,12 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         left_axes.setStyle(**axis_style)
 
         # chart_pw.setBorder('k', width=2)
-        p1 = chart_pw
-        p1.plot(border=pg.mkPen('k',width=2))
-        p1.setTitle(title, **{'color': '#000', 'size': '14pt'})
+
+        chart_plot_item.plot(border=pg.mkPen('k', width=2))
+        chart_plot_item.setTitle(self.title, **{'color': '#000', 'size': '14pt'})
+
         for i, y_value in enumerate(self.y_values):
-            p1.addItem(pg.PlotCurveItem(
+            chart_plot_item.addItem(pg.PlotCurveItem(
                 x=self.freq_values[i],
                 y=y_value,
                 pen=self.get_pen_by_int(i),
@@ -233,7 +233,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             ))
 
         # self.enableCrossHairs(chart_pw)
-        self.dialog.plot_chart(view, chart_pw)
+        self.dialog.plot_chart(graphics_view, chart_plot_item)
 
         file_name_list_to_dialog = []
         for i, file in enumerate(self.files):
@@ -469,8 +469,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.y_values = values_to_plot
         # self.y_values.append(zx[0].real)
         # self.y_values.append(zx[0].imag)
-
-        self.plot_chart('Rx 1 порт imag')
+        self.title = 'Rx 1 порт imag'
+        self.plot_chart()
 
     def calc_Rx2_re_data(self):
         self.freq_values, zx =  self.calc_rx(2, self.files, self.impedance)
@@ -478,8 +478,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         for values in zx:
             values_to_plot.append(values.real)
         self.y_values = values_to_plot
-
-        self.plot_chart('Rx 2 порт real')
+        self.title = 'Rx 2 порт real'
+        self.plot_chart()
 
     def calc_Rx2_im_data(self):
         self.freq_values, zx =  self.calc_rx(2, self.files, self.impedance)
@@ -489,38 +489,44 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.y_values = values_to_plot
         # self.y_values.append(zx[0].real)
         # self.y_values.append(zx[0].imag)
-
-        self.plot_chart('Rx 2 порт imag')
+        self.title = 'Rx 2 порт imag'
+        self.plot_chart()
 
     def calc_VSWR1_data(self):
         self.freq_values, self.y_values =  self.calc_vswr(1, self.files)
-        self.plot_chart('КСВН 1 порт')
+        self.title = 'КСВН 1 порт'
+        self.plot_chart()
 
     def calc_VSWR2_data(self):
         self.freq_values, self.y_values = self.calc_vswr(2, self.files)
-        self.plot_chart('КСВН 2 порт')
+        self.title = 'КСВН 2 порт'
+        self.plot_chart()
 
     def calc_s11_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(0, self.files)
-        self.plot_chart('S11')
+        self.title = 'S11'
+        self.plot_chart()
 
     def calc_s12_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(2, self.files)
         self.y_values = 20 * np.log10(self.y_values)
-        self.plot_chart('S12')
+        self.title = 'S12'
+        self.plot_chart()
 
     def calc_s21_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(4, self.files)
         self.y_values = 20 * np.log10(self.y_values)
-        self.plot_chart('S21')
+        self.title = 'S21'
+        self.plot_chart()
 
     def calc_s22_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(6, self.files)
-        self.plot_chart('S22')
+        self.title = 'S22'
+        self.plot_chart()
 
 
 def main():
