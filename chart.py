@@ -13,6 +13,7 @@ from cmath import rect
 from docx import Document
 import datetime
 import cv2
+from PyQt5.QtGui import QFont
 
 
 class CustomViewBox(pg.ViewBox):
@@ -48,6 +49,8 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.view = pg.GraphicsView()
         self.files_names = []
 
+        # self.plot_chart_init()
+
         self.openButton.clicked.connect(self.plot_to_word)
 
         self.spinBox_x_max.valueChanged.connect(self.spinBox_x_max_valueChanged)
@@ -56,7 +59,72 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.doubleSpinBox_y_min.valueChanged.connect(self.doubleSpinBox_y_max_valueChanged)
 
     def plot_chart_init(self):
-        pass
+        vb = CustomViewBox(self)
+        layout = pg.GraphicsLayout()
+        layout.layout.setSpacing(150.)
+        layout.setContentsMargins(0., 0., 0., 0.)
+        # layout.addViewBox(0,0)
+        self.view = pg.GraphicsView(background=pg.mkColor('w'))
+        self.view.setCentralItem(layout)
+
+        self.chart = layout.addPlot(0, 0, enableMenu=False, viewBox=vb)
+        # legend = layout.addLabel('_________________',0,1)
+
+        bottom_axes = self.chart.getAxis('bottom')
+        left_axes = self.chart.getAxis('left')
+        right_axes = self.chart.getAxis('right')
+        top_axes = self.chart.getAxis('top')
+
+        layout.addItem(self.chart.addLegend(size=(200, 100), offset=(1380, 10)), 0, 1)
+
+        left_axes.setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
+        left_axes.setLabel('----->')
+
+        self.chart.getAxis('left').setGrid(150)
+        bottom_axes.setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
+        bottom_axes.setGrid(150)
+        bottom_axes.setLabel('Частота', units='МГц')
+
+        top_axes.show()
+        top_axes.setPen(pg.mkPen('k', width=2))
+        top_axes.setTicks([])
+
+        right_axes.setLabel('   ', color='#fff')
+        right_axes.setPen(pg.mkPen('k', width=2))
+        right_axes.setTicks([])
+        right_axes.show()
+        # chart_pw.showAxis('right')
+        # results_graph(PlotWidget).setLabels(left="Frequency", bottom="Scores")
+        bottom_axes.labelStyle = {'font-size': '20pt', 'color': '#000'}
+
+        tick_font = QFont()
+        tick_font.setPixelSize(20)
+        axis_style = {
+            'tickFont': tick_font,
+            'tickLength': 10,
+            'tickTextOffset': 15,
+            'tickTextHeight': 20,
+            'tickTextWidth': 20,
+            # 'stopAxisAtTick': (False, False),
+        }
+
+        bottom_axes.setTickFont(tick_font)
+        left_axes.setTickFont(tick_font)
+
+        bottom_axes.setStyle(**axis_style)
+        left_axes.setStyle(**axis_style)
+
+        # chart_pw.setBorder('k', width=2)
+
+        self.chart.plot(border=pg.mkPen('k', width=2))
+        while self.horizontalLayout.count() > 0:
+            self.horizontalLayout.takeAt(0)
+        self.horizontalLayout.addWidget(self.view)
+        # --self.chart.setTitle(self.title, **{'color': '#000', 'size': '14pt'})
+
+    def delete_plot_items(self):
+        self.plot_chart_init()
+
     def plot_to_word(self):
         FILE_EXIST_FILE = False
         # create an exporter instance, as an argument give it
@@ -115,14 +183,13 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
 
-    def plot_chart(self, view, chart_pi):
-        self.chart = chart_pi
-        self.view = view
-        # chart.plotItem.items[0]
-        # self.horizontalLayout.widget = chart
-        while self.horizontalLayout.count() > 0:
-            self.horizontalLayout.takeAt(0)
-        self.horizontalLayout.addWidget(view)
+    def plot_chart(self):
+        # self.chart = chart_pi
+        # self.view = view
+
+        # while self.horizontalLayout.count() > 0:
+        #     self.horizontalLayout.takeAt(0)
+        # self.horizontalLayout.addWidget(view)
 
         # graph = next((x for x in self.widget.items() if x is pg.PlotItem), None)
 
@@ -136,6 +203,8 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.spinBox_x_max.setValue(x_range[1])
         self.doubleSpinBox_y_min.setValue(y_range[0])
         self.doubleSpinBox_y_max.setValue(y_range[1])
+        self.spinBox_x_max_valueChanged()
+        self.doubleSpinBox_y_max_valueChanged()
 
     def grid_range_settings_x(self, values_range):
         start = values_range[0]
