@@ -17,10 +17,22 @@ from PyQt5.QtGui import QFont
 
 
 class CustomViewBox(pg.ViewBox):
+    # cross hair
+
+
+
     def __init__(self, parent_chart_dialog, *args, **kwds):
         pg.ViewBox.__init__(self, *args, **kwds)
         self.setMouseMode(self.RectMode)
         self.chart = parent_chart_dialog
+        self.label = pg.LabelItem(text='Hello!', justify='left')
+        # self.addItem(self.label)
+        self.proxy = ''
+        self.vLine = pg.InfiniteLine(angle=90, movable=False)
+        self.hLine = pg.InfiniteLine(angle=0, movable=False)
+        # self.addItem(self.vLine)
+        # self.addItem(self.hLine)
+
     ## reimplement right-click to zoom out
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
@@ -28,6 +40,8 @@ class CustomViewBox(pg.ViewBox):
             self.chart.spinBox_x_max_valueChanged()
             self.chart.doubleSpinBox_y_max_valueChanged()
 
+    def subscribe_to_mouse_event(self):
+        self.proxy = pg.SignalProxy(self.chart.chart.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
 
     def mouseDragEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
@@ -38,6 +52,21 @@ class CustomViewBox(pg.ViewBox):
     def wheelEvent(self, ev, axis=None):
         ev.ignore()
 
+    def mouseMoved(self, evt):
+        pos = evt[0]  ## using signal proxy turns original arguments into a tuple
+        if self.chart.chart.sceneBoundingRect().contains(pos):
+            mousePoint = self.mapSceneToView(pos)
+            index = int(mousePoint.x())
+            if index > 0 and index < 1000:
+                self.label.setText(
+                    "<span style='font-size: 12pt'>"
+                        "<span style='color: blue'>x=%0.1f</span>, <br>  "
+                        "<span style='color: red'>y1=%0.3f</span>, <br>"
+                        "<span style='color: green'>y2=%0.1f"
+                    "</span>" % (
+                    mousePoint.x(), mousePoint.y(), index))
+            self.vLine.setPos(mousePoint.x())
+            self.hLine.setPos(mousePoint.y())
 
 
 class Chart(QtWidgets.QDialog, form.Ui_Dialog):
@@ -61,14 +90,19 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
     def plot_chart_init(self):
         vb = CustomViewBox(self)
         layout = pg.GraphicsLayout()
-        layout.layout.setSpacing(150.)
+
+        # layout.layout.setSpacing(150.)
         layout.setContentsMargins(0., 0., 0., 0.)
         # layout.addViewBox(0,0)
         self.view = pg.GraphicsView(background=pg.mkColor('w'))
         self.view.setCentralItem(layout)
 
         self.chart = layout.addPlot(0, 0, enableMenu=False, viewBox=vb)
+        layout.addItem(vb.label, 0, 1)
+        self.chart.addItem(vb.vLine)
+        self.chart.addItem(vb.hLine)
         # legend = layout.addLabel('_________________',0,1)
+        vb.subscribe_to_mouse_event()
 
         bottom_axes = self.chart.getAxis('bottom')
         left_axes = self.chart.getAxis('left')
@@ -199,10 +233,31 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         # self.grid_range_settings_x(x_range)
         # self.grid_range_settings_y(y_range)
         #
-        self.spinBox_x_min.setValue(x_range[0])
-        self.spinBox_x_max.setValue(x_range[1])
-        self.doubleSpinBox_y_min.setValue(y_range[0])
-        self.doubleSpinBox_y_max.setValue(y_range[1])
+        xMin = 9999;
+        xMax = -9999;
+        yMax = -9999;
+        yMin = 9999;
+        for plot_item in self.chart.items:
+            if type(plot_item) is pg.PlotCurveItem:
+                if min(plot_item.xData) < xMin:
+                    xMin = min(plot_item.xData)
+                if max(plot_item.xData) > xMax:
+                    xMax = max(plot_item.xData)
+                if min(plot_item.yData) < yMin:
+                    yMin = min(plot_item.yData)
+                if max(plot_item.yData) > yMax:
+                    yMax = max(plot_item.yData)
+
+
+        # self.spinBox_x_min.setValue(x_range[0])
+        # self.spinBox_x_max.setValue(x_range[1])
+        # self.doubleSpinBox_y_min.setValue(y_range[0])
+        # self.doubleSpinBox_y_max.setValue(y_range[1])
+
+        self.spinBox_x_min.setValue(xMin)
+        self.spinBox_x_max.setValue(xMax)
+        self.doubleSpinBox_y_min.setValue(yMin)
+        self.doubleSpinBox_y_max.setValue(yMax)
         self.spinBox_x_max_valueChanged()
         self.doubleSpinBox_y_max_valueChanged()
 
