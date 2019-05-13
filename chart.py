@@ -61,10 +61,10 @@ class CustomViewBox(pg.ViewBox):
                 self.label.setText(
                     "<span style='font-size: 12pt'>"
                         "<span style='color: blue'>x=%0.1f</span>, <br>  "
-                        "<span style='color: red'>y1=%0.3f</span>, <br>"
-                        "<span style='color: green'>y2=%0.1f"
+                        "<span style='color: red' >y=%0.3f</span>, <br>"
+                        # "<span style='color: green'>y2=%0.1f"
                     "</span>" % (
-                    mousePoint.x(), mousePoint.y(), index))
+                    mousePoint.x(), mousePoint.y()))
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
 
@@ -91,8 +91,8 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         vb = CustomViewBox(self)
         layout = pg.GraphicsLayout()
 
-        # layout.layout.setSpacing(150.)
-        layout.setContentsMargins(0., 0., 0., 0.)
+        # set left margin
+        layout.setContentsMargins(50., 0., 0., 0.)
         # layout.addViewBox(0,0)
         self.view = pg.GraphicsView(background=pg.mkColor('w'))
         self.view.setCentralItem(layout)
@@ -112,7 +112,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         layout.addItem(self.chart.addLegend(size=(200, 100), offset=(1380, 10)), 0, 1)
 
         left_axes.setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
-        left_axes.setLabel('----->')
+        left_axes.setLabel('  ')
 
         self.chart.getAxis('left').setGrid(150)
         bottom_axes.setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
@@ -274,8 +274,8 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         start = values_range[0]
         end = values_range[1]
         dy = (end-start)/6
-        delta = [(value, '{0:.2g}'.format(value)) for value in list(drange(start, end, dy))]
-        delta.append((end, '{0:.2g}'.format(end)))
+        delta = [(value, '{:.2f}'.format(value)) for value in list(drange(start, end, dy))]
+        delta.append((end, '{:.2f}'.format(end)))
         ay = self.chart.getAxis('left')
         ay.setTicks([delta, []])
 

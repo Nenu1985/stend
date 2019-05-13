@@ -59,6 +59,7 @@ class Ui_Dialog(object):
         font.setPointSize(12)
         self.doubleSpinBox_y_max.setFont(font)
         self.doubleSpinBox_y_max.setMinimum(-9999.0)
+        self.doubleSpinBox_y_max.setMaximum(9999.99)
         self.doubleSpinBox_y_max.setObjectName("doubleSpinBox_y_max")
         self.gridLayout_2.addWidget(self.doubleSpinBox_y_max, 0, 0, 1, 1)
         self.doubleSpinBox_y_min = QtWidgets.QDoubleSpinBox(self.tab)

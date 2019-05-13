@@ -402,8 +402,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.y_values = values_to_plot
         # self.y_values.append(zx[0].real)
         # self.y_values.append(zx[0].imag)
-
-        self.plot_chart('Rx 1 порт real')
+        self.title = 'Rx 1 порт real'
+        self.plot_chart()
 
     def calc_Rx1_im_data(self):
         self.freq_values, zx =  self.calc_rx(1, self.files, self.impedance)
