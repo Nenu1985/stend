@@ -93,6 +93,13 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.spinBox_thickness5.valueChanged.connect(self.spinBox_thickness5_valueChanged)
         self.spinBox_thickness6.valueChanged.connect(self.spinBox_thickness6_valueChanged)
 
+        self.comboBox_linetype1.currentTextChanged.connect(self.comboBox_linetype1_changed)
+        self.comboBox_linetype2.currentTextChanged.connect(self.comboBox_linetype2_changed)
+        self.comboBox_linetype3.currentTextChanged.connect(self.comboBox_linetype3_changed)
+        self.comboBox_linetype4.currentTextChanged.connect(self.comboBox_linetype4_changed)
+        self.comboBox_linetype5.currentTextChanged.connect(self.comboBox_linetype5_changed)
+        self.comboBox_linetype6.currentTextChanged.connect(self.comboBox_linetype6_changed)
+
         self.pushButton_S11.clicked.connect(self.calc_s11_data)
         self.pushButton_S21.clicked.connect(self.calc_s21_data)
         self.pushButton_S12.clicked.connect(self.calc_s12_data)
@@ -142,6 +149,23 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.checkBox_filePlot4.setCheckState(self.files_to_plot[3])
         self.checkBox_filePlot5.setCheckState(self.files_to_plot[4])
         self.checkBox_filePlot6.setCheckState(self.files_to_plot[5])
+
+        items = chart_prop.get_line_types()
+        keys =  list(items.keys())
+
+        self.comboBox_linetype1.addItems(keys)
+        self.comboBox_linetype2.addItems(keys)
+        self.comboBox_linetype3.addItems(keys)
+        self.comboBox_linetype4.addItems(keys)
+        self.comboBox_linetype5.addItems(keys)
+        self.comboBox_linetype6.addItems(keys)
+
+        self.comboBox_linetype1.setCurrentIndex(list(items.values()).index(self.chart_properties[0].type))
+        self.comboBox_linetype2.setCurrentIndex(list(items.values()).index(self.chart_properties[1].type))
+        self.comboBox_linetype3.setCurrentIndex(list(items.values()).index(self.chart_properties[2].type))
+        self.comboBox_linetype4.setCurrentIndex(list(items.values()).index(self.chart_properties[3].type))
+        self.comboBox_linetype5.setCurrentIndex(list(items.values()).index(self.chart_properties[4].type))
+        self.comboBox_linetype6.setCurrentIndex(list(items.values()).index(self.chart_properties[5].type))
 
     def get_files_to_plot(self):
         """
@@ -291,54 +315,63 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
 
 # -------------------------------------- EVENT HANDLERS ----------------------#
-    def enableCrossHairs(self, plot, curves=[]):
-        """
-        Enables crosshairs on the specified plot
-
-        .. tabularcolumns:: |p{3cm}|p{11cm}|
-
-        ===============  ============================================================================================
-        **Arguments**
-        ===============  ============================================================================================
-        plot             The plot to activate this feature on
-        ===============  ============================================================================================
-        """
-
-        plot.setTitle('')
-        vLine = pg.InfiniteLine(angle=90, movable=False, pen=[100, 100, 200, 200])
-        plot.addItem(vLine, ignoreBounds=True)
-        hLine = pg.InfiniteLine(angle=0, movable=False, pen=[100, 100, 200, 200])
-        plot.addItem(hLine, ignoreBounds=True)
-        plot.hLine = hLine;
-        plot.vLine = vLine
-
-        crossHairPartial = functools.partial(self.crossHairEvent, plot)
-        proxy = pg.SignalProxy(plot.scene().sigMouseClicked, rateLimit=60, slot=crossHairPartial)
-        plot.proxy = proxy
-        plot.mousePoint = None
 
 
+    # ------------ ТИП (штрих и т.д.) -------------------#
+    def comboBox_linetype1_changed(self, value):
+        self.chart_properties[0].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.plot_chart()
+
+    def comboBox_linetype2_changed(self, value):
+        self.chart_properties[1].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.plot_chart()
+
+    def comboBox_linetype3_changed(self, value):
+        self.chart_properties[2].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.plot_chart()
+
+    def comboBox_linetype4_changed(self, value):
+        self.chart_properties[3].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.plot_chart()
+
+    def comboBox_linetype5_changed(self, value):
+        self.chart_properties[4].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.plot_chart()
+
+    def comboBox_linetype6_changed(self, value):
+        self.chart_properties[5].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.plot_chart()
+    # ------------ ТОЛЩИНА -------------------#
     def spinBox_thickness1_valueChanged(self):
         self.chart_properties[0].line_thick = int(self.spinBox_thickness1.value())
+        self.plot_chart()
 
     def spinBox_thickness2_valueChanged(self):
         self.chart_properties[1].line_thick = int(self.spinBox_thickness2.value())
+        self.plot_chart()
 
     def spinBox_thickness3_valueChanged(self):
         self.chart_properties[2].line_thick = int(self.spinBox_thickness3.value())
+        self.plot_chart()
 
     def spinBox_thickness4_valueChanged(self):
         self.chart_properties[3].line_thick = int(self.spinBox_thickness4.value())
+        self.plot_chart()
 
     def spinBox_thickness5_valueChanged(self):
         self.chart_properties[4].line_thick = int(self.spinBox_thickness5.value())
+        self.plot_chart()
 
     def spinBox_thickness6_valueChanged(self):
         self.chart_properties[5].line_thick = int(self.spinBox_thickness6.value())
+        self.plot_chart()
 
+    # ------------ СОПРОТИВЛЕНИЕ -------------------#
     def spinBox_impedance_valueChanged(self):
         self.impedance = int(self.spinBox_impedance.value())
+        self.plot_chart()
 
+    # ------------ ОТКРЫТЬ ФАЙЛ -------------------#
     def onclick_open_file1(self):
         self.files[0] = self.browse_folder()
         self.lineEdit_filename1.setText(self.files[0])
@@ -363,37 +396,44 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.files[5] = self.browse_folder()
         self.lineEdit_filename6.setText(self.files[5])
 
+    # ------------ ЦВЕТ -------------------#
     def onclick_color1(self):
         color = QColorDialog.getColor()
         self.chart_properties[0].color = color.name()
         self.pushButton_color1.setStyleSheet("background-color: {}".format(self.chart_properties[0].color))
+        self.plot_chart()
 
     def onclick_color2(self):
         color = QColorDialog.getColor()
         self.chart_properties[1].color = color.name()
         self.pushButton_color2.setStyleSheet("background-color: {}".format(self.chart_properties[1].color))
+        self.plot_chart()
 
     def onclick_color3(self):
         color = QColorDialog.getColor()
         self.chart_properties[2].color = color.name()
         self.pushButton_color3.setStyleSheet("background-color: {}".format(self.chart_properties[2].color))
+        self.plot_chart()
 
     def onclick_color4(self):
         color = QColorDialog.getColor()
         self.chart_properties[3].color = color.name()
         self.pushButton_color4.setStyleSheet("background-color: {}".format(self.chart_properties[3].color))
+        self.plot_chart()
 
     def onclick_color5(self):
         color = QColorDialog.getColor()
         self.chart_properties[4].color = color.name()
         self.pushButton_color5.setStyleSheet("background-color: {}".format(self.chart_properties[4].color))
+        self.plot_chart()
 
     def onclick_color6(self):
         color = QColorDialog.getColor()
         self.chart_properties[5].color = color.name()
         self.pushButton_color6.setStyleSheet("background-color: {}".format(self.chart_properties[5].color))
+        self.plot_chart()
 
-
+    # ------------ КНОПКИ РАСЧЁТА -------------------#
     def calc_Rx1_re_data(self):
         self.freq_values, zx =  self.calc_rx(1, self.files, self.impedance)
         values_to_plot = []

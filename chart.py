@@ -39,6 +39,7 @@ class CustomViewBox(pg.ViewBox):
             self.autoRange()
             self.chart.spinBox_x_max_valueChanged()
             self.chart.doubleSpinBox_y_max_valueChanged()
+            self.chart.plot_chart()
 
     def subscribe_to_mouse_event(self):
         self.proxy = pg.SignalProxy(self.chart.chart.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
