@@ -22,7 +22,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -53,6 +53,9 @@
            <property name="text">
             <string>Цвет</string>
            </property>
+           <property name="indent">
+            <number>15</number>
+           </property>
           </widget>
          </item>
          <item>
@@ -76,6 +79,9 @@
            </property>
            <property name="text">
             <string>Толщина</string>
+           </property>
+           <property name="indent">
+            <number>5</number>
            </property>
           </widget>
          </item>
@@ -103,10 +109,80 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QLabel" name="label_14">
+           <property name="minimumSize">
+            <size>
+             <width>55</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>55</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Маркер</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item row="1" column="0">
         <layout class="QGridLayout" name="gridLayout_2">
+         <item row="1" column="1">
+          <widget class="QPushButton" name="pushButton_color2">
+           <property name="minimumSize">
+            <size>
+             <width>60</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QSpinBox" name="spinBox_thickness6">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="value">
+            <number>2</number>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="3">
+          <widget class="QComboBox" name="comboBox_linetype6">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="0">
           <widget class="QLabel" name="label_8">
            <property name="minimumSize">
@@ -203,24 +279,6 @@
            </property>
            <property name="text">
             <string>2</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QPushButton" name="pushButton_color2">
-           <property name="minimumSize">
-            <size>
-             <width>60</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string/>
            </property>
           </widget>
          </item>
@@ -524,38 +582,23 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="2">
-          <widget class="QSpinBox" name="spinBox_thickness6">
-           <property name="minimumSize">
-            <size>
-             <width>70</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>70</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="value">
-            <number>2</number>
-           </property>
-          </widget>
+         <item row="0" column="4">
+          <widget class="QComboBox" name="comboBox_marker1"/>
          </item>
-         <item row="5" column="3">
-          <widget class="QComboBox" name="comboBox_linetype6">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-          </widget>
+         <item row="1" column="4">
+          <widget class="QComboBox" name="comboBox_marker2"/>
+         </item>
+         <item row="2" column="4">
+          <widget class="QComboBox" name="comboBox_marker3"/>
+         </item>
+         <item row="3" column="4">
+          <widget class="QComboBox" name="comboBox_marker4"/>
+         </item>
+         <item row="4" column="4">
+          <widget class="QComboBox" name="comboBox_marker5"/>
+         </item>
+         <item row="5" column="4">
+          <widget class="QComboBox" name="comboBox_marker6"/>
          </item>
         </layout>
        </item>

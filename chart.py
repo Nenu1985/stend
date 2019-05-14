@@ -265,7 +265,11 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
     def grid_range_settings_x(self, values_range):
         start = values_range[0]
         end = values_range[1]
+
         dx = int((end-start)/8)
+        if dx == 0:
+            print('Слишком маленький диапазон')
+            return
         delta = [(value, str(value)) for value in list(range(start, end-dx, dx))]
         delta.append((end, str(end)))
         ax = self.chart.getAxis('bottom')

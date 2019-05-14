@@ -3,24 +3,19 @@
 #
 # RUN:
 # pyinstaller --hidden-import python-docx --hidden-import pyqtgraph --onefile main_ui.py
-import functools
 import sys
 import collections
 import json
-from PyQt5 import QtWidgets, QtCore, QtGui
+from typing import List
+
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QColorDialog
-
 import pyqtgraph as pg
-#from pytest import collect
-
-import PGQ_image_exporter # modified pyqtgraph Exporter!
 import numpy as np
 import ui
-import form
 from cmath import rect
-from chart import Chart, CustomViewBox
-from chart_properties import ChartProperties as chart_prop
-# from PyQt4 import QtCore, QtGuif
+from chart import Chart
+from chart_properties import ChartProperties as ChartProps
 
 # Команда для преобразования файла QtDesigner в питоновский:
 # -------->  pyuic5 UI.ui -o ui.py
@@ -49,10 +44,12 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.title = 'График'
         self.chart_properties = []
         for prop in json_data['chart_properties']:
-            self.chart_properties.append(chart_prop(
+            self.chart_properties.append(ChartProps(
                 color=prop['color'],
                 thick=prop['line_thick'],
                 type=prop['type'],
+                marker=prop.get('marker', ''),
+
             )
             )
         self.setGeometry(QtCore.QRect(*json_data['main_geometry']))
@@ -99,6 +96,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.comboBox_linetype4.currentTextChanged.connect(self.comboBox_linetype4_changed)
         self.comboBox_linetype5.currentTextChanged.connect(self.comboBox_linetype5_changed)
         self.comboBox_linetype6.currentTextChanged.connect(self.comboBox_linetype6_changed)
+
+        self.comboBox_marker1.currentTextChanged.connect(self.comboBox_marker1_changed)
 
         self.pushButton_S11.clicked.connect(self.calc_s11_data)
         self.pushButton_S21.clicked.connect(self.calc_s21_data)
@@ -154,8 +153,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.checkBox_filePlot5.setCheckState(self.files_to_plot[4])
         self.checkBox_filePlot6.setCheckState(self.files_to_plot[5])
 
-        items = chart_prop.get_line_types()
-        keys =  list(items.keys())
+        items = ChartProps.get_line_types()
+        keys = list(items.keys())
 
         self.comboBox_linetype1.addItems(keys)
         self.comboBox_linetype2.addItems(keys)
@@ -170,6 +169,22 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.comboBox_linetype4.setCurrentIndex(list(items.values()).index(self.chart_properties[3].type))
         self.comboBox_linetype5.setCurrentIndex(list(items.values()).index(self.chart_properties[4].type))
         self.comboBox_linetype6.setCurrentIndex(list(items.values()).index(self.chart_properties[5].type))
+
+        items = ChartProps.get_line_markers()
+        keys = list(items.keys())
+
+        self.comboBox_marker1.addItems(keys)
+        self.comboBox_marker2.addItems(keys)
+        self.comboBox_marker3.addItems(keys)
+        self.comboBox_marker4.addItems(keys)
+        self.comboBox_marker5.addItems(keys)
+        self.comboBox_marker6.addItems(keys)
+        self.comboBox_linetype1.setCurrentIndex(keys.index(self.chart_properties[0].marker))
+        self.comboBox_linetype2.setCurrentIndex(keys.index(self.chart_properties[1].marker))
+        self.comboBox_linetype3.setCurrentIndex(keys.index(self.chart_properties[2].marker))
+        self.comboBox_linetype4.setCurrentIndex(keys.index(self.chart_properties[3].marker))
+        self.comboBox_linetype5.setCurrentIndex(keys.index(self.chart_properties[4].marker))
+        self.comboBox_linetype6.setCurrentIndex(keys.index(self.chart_properties[5].marker))
 
     def get_files_to_plot(self):
         """
@@ -196,12 +211,15 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         chart_plot_item.setTitle(self.title, **{'color': '#000', 'size': '14pt'})
 
         for i, y_value in enumerate(self.y_values):
+
             chart_plot_item.addItem(pg.PlotCurveItem(
                 x=self.freq_values[i],
                 y=y_value,
                 pen=self.get_pen_by_int(i),
                 name='график {}'.format(i),
+                symbol=self.chart_properties[i].marker,
                 # ignoreBounds=True,
+
             ))
 
         # self.enableCrossHairs(chart_pw)
@@ -214,7 +232,6 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.dialog.files_names = file_name_list_to_dialog
         self.dialog.show()
 
-
     def get_pen_by_int(self, chart_num):
         return pg.mkPen(
             self.chart_properties[chart_num].color,
@@ -223,7 +240,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         )
 
     def to_json(self):
-        data = {}
+        data = dict()
         data['files'] = self.files
         data['chart_properties'] = [i.__dict__ for i in self.chart_properties]
         data['impedance'] = self.impedance
@@ -236,7 +253,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             json.dump(data, outfile, indent=4)
     # -------------------------------------- CLASS METHODS ----------------------#
 
-    def read_data_file(self, filename):
+    @staticmethod
+    def read_data_file(filename):
         data = {}
 
         try:
@@ -259,7 +277,6 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             if len(line) == 3:  # case for s1p
                 f, *values = line
                 data[float(f) / 10 ** 6] = list(map(float, values))
-
 
         data = collections.OrderedDict(sorted(data.items()))
         freq_values = list(data.keys())
@@ -290,11 +307,11 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def calc_vswr(self, port_number, data_files):
 
         if port_number == 2:
-            freqs, values =  self.get_data_values(6, data_files)  # abs(S22)
+            freqs, values = self.get_data_values(6, data_files)  # abs(S22)
         else:
             freqs, values = self.get_data_values(0, data_files)  # abs(S11)
 
-        vswr = []
+        vswr = []  # type: List[float]
         for value in values:
             vswr.append((1 + value) / (1 - value))
 
@@ -326,27 +343,31 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 # -------------------------------------- EVENT HANDLERS ----------------------#
     # ------------ ТИП (штрих и т.д.) -------------------#
     def comboBox_linetype1_changed(self, value):
-        self.chart_properties[0].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.chart_properties[0].type = ChartProps.get_line_types().get(value, QtCore.Qt.SolidLine)
         self.plot_chart()
 
     def comboBox_linetype2_changed(self, value):
-        self.chart_properties[1].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.chart_properties[1].type = ChartProps.get_line_types().get(value, QtCore.Qt.SolidLine)
         self.plot_chart()
 
     def comboBox_linetype3_changed(self, value):
-        self.chart_properties[2].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.chart_properties[2].type = ChartProps.get_line_types().get(value, QtCore.Qt.SolidLine)
         self.plot_chart()
 
     def comboBox_linetype4_changed(self, value):
-        self.chart_properties[3].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.chart_properties[3].type = ChartProps.get_line_types().get(value, QtCore.Qt.SolidLine)
         self.plot_chart()
 
     def comboBox_linetype5_changed(self, value):
-        self.chart_properties[4].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.chart_properties[4].type = ChartProps.get_line_types().get(value, QtCore.Qt.SolidLine)
         self.plot_chart()
 
     def comboBox_linetype6_changed(self, value):
-        self.chart_properties[5].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.chart_properties[5].type = ChartProps.get_line_types().get(value, QtCore.Qt.SolidLine)
+        self.plot_chart()
+
+    def comboBox_marker1_changed(self, value):
+        self.chart_properties[0].marker = value
         self.plot_chart()
 
     # ------------ ТОЛЩИНА -------------------#
