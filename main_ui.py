@@ -111,6 +111,10 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.pushButton_Rx2_re.clicked.connect(self.calc_Rx2_re_data)
         self.pushButton_Rx2_im.clicked.connect(self.calc_Rx2_im_data)
 
+        self.pushButton_S11_ang.clicked.connect(self.calc_S11_ang_data)
+        self.pushButton_S12_ang.clicked.connect(self.calc_S12_ang_data)
+        self.pushButton_S21_ang.clicked.connect(self.calc_S21_ang_data)
+        self.pushButton_S22_ang.clicked.connect(self.calc_S22_ang_data)
 
         self.freq_values = []
         self.y_values = []
@@ -264,8 +268,13 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         return freq_values, values_correct_format
 
-
     def get_data_values(self, column_number, data_files):
+        """
+
+        :param column_number: column in s2p file (0 - freq, 1 - s11_abs, 2-s11_and...)
+        :param data_files: list of files are need to plot
+        :return: tuple (freqs : list, values: list)
+        """
         freq_values_out = []
         values = []
         for i, data_file in enumerate(data_files):
@@ -315,8 +324,6 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
 
 # -------------------------------------- EVENT HANDLERS ----------------------#
-
-
     # ------------ ТИП (штрих и т.д.) -------------------#
     def comboBox_linetype1_changed(self, value):
         self.chart_properties[0].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
@@ -341,6 +348,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def comboBox_linetype6_changed(self, value):
         self.chart_properties[5].type = chart_prop.get_line_types().get(value, QtCore.Qt.SolidLine)
         self.plot_chart()
+
     # ------------ ТОЛЩИНА -------------------#
     def spinBox_thickness1_valueChanged(self):
         self.chart_properties[0].line_thick = int(self.spinBox_thickness1.value())
@@ -512,6 +520,29 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.title = 'S22'
         self.plot_chart()
 
+    def calc_S11_ang_data(self):
+        self.y_values = []
+        self.freq_values, self.y_values = self.get_data_values(1, self.files)
+        self.title = 'S11 фаза'
+        self.plot_chart()
+
+    def calc_S12_ang_data(self):
+        self.y_values = []
+        self.freq_values, self.y_values = self.get_data_values(3, self.files)
+        self.title = 'S12 фаза'
+        self.plot_chart()
+
+    def calc_S21_ang_data(self):
+        self.y_values = []
+        self.freq_values, self.y_values = self.get_data_values(5, self.files)
+        self.title = 'S21 фаза'
+        self.plot_chart()
+
+    def calc_S22_ang_data(self):
+        self.y_values = []
+        self.freq_values, self.y_values = self.get_data_values(7, self.files)
+        self.title = 'S22 фаза'
+        self.plot_chart()
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
