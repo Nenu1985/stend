@@ -24,7 +24,7 @@ class CustomViewBox(pg.ViewBox):
     def __init__(self, parent_chart_dialog, *args, **kwds):
         pg.ViewBox.__init__(self, *args, **kwds)
         self.setMouseMode(self.RectMode)
-        self.chart = parent_chart_dialog
+        self.chart_dialog_form = parent_chart_dialog
         self.label = pg.LabelItem(text='Hello!', justify='left')
         # self.addItem(self.label)
         self.proxy = ''
@@ -37,12 +37,12 @@ class CustomViewBox(pg.ViewBox):
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
             self.autoRange()
-            self.chart.spinBox_x_max_valueChanged()
-            self.chart.doubleSpinBox_y_max_valueChanged()
-            self.chart.plot_chart()
+            self.chart_dialog_form.spinBox_x_max_valueChanged()
+            self.chart_dialog_form.doubleSpinBox_y_max_valueChanged()
+            self.chart_dialog_form.plot_chart()
 
     def subscribe_to_mouse_event(self):
-        self.proxy = pg.SignalProxy(self.chart.chart.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
+        self.proxy = pg.SignalProxy(self.chart_dialog_form.chart.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
 
     def mouseDragEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
@@ -55,7 +55,7 @@ class CustomViewBox(pg.ViewBox):
 
     def mouseMoved(self, evt):
         pos = evt[0]  ## using signal proxy turns original arguments into a tuple
-        if self.chart.chart.sceneBoundingRect().contains(pos):
+        if self.chart_dialog_form.chart.sceneBoundingRect().contains(pos):
             mousePoint = self.mapSceneToView(pos)
             index = int(mousePoint.x())
             if index > 0 and index < 1000:
@@ -77,6 +77,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.setupUi(self)
         self.chart = pg.PlotItem()
         self.view = pg.GraphicsView()
+        self.layout = pg.GraphicsLayout()
         self.files_names = []
 
         # self.plot_chart_init()
@@ -90,16 +91,16 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
 
     def plot_chart_init(self):
         vb = CustomViewBox(self)
-        layout = pg.GraphicsLayout()
+
 
         # set left margin
-        layout.setContentsMargins(50., 0., 0., 0.)
+        self.layout.setContentsMargins(50., 0., 0., 0.)
         # layout.addViewBox(0,0)
         self.view = pg.GraphicsView(background=pg.mkColor('w'))
-        self.view.setCentralItem(layout)
+        self.view.setCentralItem(self.layout)
 
-        self.chart = layout.addPlot(0, 0, enableMenu=False, viewBox=vb)
-        layout.addItem(vb.label, 0, 1)
+        self.chart = self.layout.addPlot(0, 0, enableMenu=False, viewBox=vb)
+        self.layout.addItem(vb.label, 0, 1)
         self.chart.addItem(vb.vLine)
         self.chart.addItem(vb.hLine)
         # legend = layout.addLabel('_________________',0,1)
@@ -110,7 +111,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         right_axes = self.chart.getAxis('right')
         top_axes = self.chart.getAxis('top')
 
-        layout.addItem(self.chart.addLegend(size=(200, 100), offset=(1380, 10)), 0, 1)
+        self.layout.addItem(self.chart.addLegend(size=(200, 100), offset=(1380, 10)), 0, 1)
 
         left_axes.setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
         left_axes.setLabel('  ')

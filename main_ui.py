@@ -211,16 +211,20 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         chart_plot_item.setTitle(self.title, **{'color': '#000', 'size': '14pt'})
 
         for i, y_value in enumerate(self.y_values):
+            plot_item = pg.PlotCurveItem(
 
-            chart_plot_item.addItem(pg.PlotCurveItem(
+
+                # symbol=self.chart_properties[i].marker,
+                # ignoreBounds=True,
+            )
+            plot_item.setData(
                 x=self.freq_values[i],
                 y=y_value,
+                symbol='o',
                 pen=self.get_pen_by_int(i),
                 name='график {}'.format(i),
-                symbol=self.chart_properties[i].marker,
-                # ignoreBounds=True,
-
-            ))
+            )
+            chart_plot_item.addItem(plot_item)
 
         # self.enableCrossHairs(chart_pw)
         self.dialog.plot_chart()
