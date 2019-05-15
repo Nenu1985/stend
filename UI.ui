@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>707</width>
+    <width>712</width>
     <height>390</height>
    </rect>
   </property>
@@ -22,7 +22,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -1102,7 +1102,7 @@
             </font>
            </property>
            <property name="text">
-            <string>VSWR1</string>
+            <string>КСВН1</string>
            </property>
           </widget>
          </item>
@@ -1116,7 +1116,7 @@
             </font>
            </property>
            <property name="text">
-            <string>VSWR2</string>
+            <string>КСВН2</string>
            </property>
           </widget>
          </item>
@@ -1182,6 +1182,13 @@
           </layout>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_do_not_delete_current_plots">
+         <property name="text">
+          <string>Не удалять графики</string>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer">

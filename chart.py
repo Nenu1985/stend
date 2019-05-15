@@ -77,7 +77,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.setupUi(self)
         self.chart = pg.PlotItem()
         self.view = pg.GraphicsView()
-        self.layout = pg.GraphicsLayout()
+        self.gr_layout = pg.GraphicsLayout()
         self.files_names = []
 
         # self.plot_chart_init()
@@ -92,15 +92,17 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
     def plot_chart_init(self):
         vb = CustomViewBox(self)
 
-
+        self.gr_layout = pg.GraphicsLayout()
         # set left margin
-        self.layout.setContentsMargins(50., 0., 0., 0.)
+        self.gr_layout.setContentsMargins(50., 0., 0., 0.)
         # layout.addViewBox(0,0)
         self.view = pg.GraphicsView(background=pg.mkColor('w'))
-        self.view.setCentralItem(self.layout)
-
-        self.chart = self.layout.addPlot(0, 0, enableMenu=False, viewBox=vb)
-        self.layout.addItem(vb.label, 0, 1)
+        self.view.setCentralItem(self.gr_layout)
+        #
+        self.chart = pg.PlotItem(enableMenu=False, viewBox=vb)
+        self.gr_layout.addItem(self.chart, 0, 0)
+        # self.chart = self.gr_layout.addPlot(0, 0, enableMenu=False, viewBox=vb)
+        self.gr_layout.addItem(vb.label, 0, 1)
         self.chart.addItem(vb.vLine)
         self.chart.addItem(vb.hLine)
         # legend = layout.addLabel('_________________',0,1)
@@ -111,7 +113,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         right_axes = self.chart.getAxis('right')
         top_axes = self.chart.getAxis('top')
 
-        self.layout.addItem(self.chart.addLegend(size=(200, 100), offset=(1380, 10)), 0, 1)
+        self.gr_layout.addItem(self.chart.addLegend(size=(200, 100), offset=(1380, 10)), 0, 1)
 
         left_axes.setPen(pg.mkPen('k', width=2, style=QtCore.Qt.SolidLine))
         left_axes.setLabel('  ')
@@ -152,11 +154,19 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
 
         # chart_pw.setBorder('k', width=2)
 
-        self.chart.plot(border=pg.mkPen('k', width=2))
+        # self.chart.plot(border=pg.mkPen('k', width=5), symbol='o')
+        # self.chart.plot(x=[1,2,3,4,5], y = [10,20,30,40,50], border=pg.mkPen('k', width=5), symbol='o')
         while self.horizontalLayout.count() > 0:
             self.horizontalLayout.takeAt(0)
         self.horizontalLayout.addWidget(self.view)
         # --self.chart.setTitle(self.title, **{'color': '#000', 'size': '14pt'})
+
+    def get_chart_plot_items_number(self):
+        number = 0
+        for plot_item in self.chart.items:
+            if type(plot_item) is pg.PlotCurveItem:
+                number += 1
+        return number
 
     def delete_plot_items(self):
         self.plot_chart_init()
@@ -194,8 +204,6 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
             document.add_paragraph(file_name)
         document.add_page_break()
 
-
-        # document.save(word_file_name)
         try:
             document.save(word_file_name)
         except PackageNotFoundError as e:
@@ -220,46 +228,26 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         msg.exec_()
 
     def plot_chart(self):
-        # self.chart = chart_pi
-        # self.view = view
 
-        # while self.horizontalLayout.count() > 0:
-        #     self.horizontalLayout.takeAt(0)
-        # self.horizontalLayout.addWidget(view)
-
-        # graph = next((x for x in self.widget.items() if x is pg.PlotItem), None)
-
-        x_range = [int(i) for i in self.chart.viewRange()[0]]
-        y_range = self.chart.viewRange()[1]
-        #
-        # self.grid_range_settings_x(x_range)
-        # self.grid_range_settings_y(y_range)
-        #
-        xMin = 9999;
-        xMax = -9999;
-        yMax = -9999;
-        yMin = 9999;
+        x_min = 9999;
+        x_max = -9999;
+        y_max = -9999;
+        y_min = 9999;
         for plot_item in self.chart.items:
-            if type(plot_item) is pg.PlotCurveItem:
-                if min(plot_item.xData) < xMin:
-                    xMin = min(plot_item.xData)
-                if max(plot_item.xData) > xMax:
-                    xMax = max(plot_item.xData)
-                if min(plot_item.yData) < yMin:
-                    yMin = min(plot_item.yData)
-                if max(plot_item.yData) > yMax:
-                    yMax = max(plot_item.yData)
+            if type(plot_item) is pg.PlotCurveItem or type(plot_item) is pg.PlotDataItem:
+                if min(plot_item.xData) < x_min:
+                    x_min = min(plot_item.xData)
+                if max(plot_item.xData) > x_max:
+                    x_max = max(plot_item.xData)
+                if min(plot_item.yData) < y_min:
+                    y_min = min(plot_item.yData)
+                if max(plot_item.yData) > y_max:
+                    y_max = max(plot_item.yData)
 
-
-        # self.spinBox_x_min.setValue(x_range[0])
-        # self.spinBox_x_max.setValue(x_range[1])
-        # self.doubleSpinBox_y_min.setValue(y_range[0])
-        # self.doubleSpinBox_y_max.setValue(y_range[1])
-
-        self.spinBox_x_min.setValue(xMin)
-        self.spinBox_x_max.setValue(xMax)
-        self.doubleSpinBox_y_min.setValue(yMin)
-        self.doubleSpinBox_y_max.setValue(yMax)
+        self.spinBox_x_min.setValue(x_min)
+        self.spinBox_x_max.setValue(x_max)
+        self.doubleSpinBox_y_min.setValue(y_min)
+        self.doubleSpinBox_y_max.setValue(y_max)
         self.spinBox_x_max_valueChanged()
         self.doubleSpinBox_y_max_valueChanged()
 

@@ -98,6 +98,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.comboBox_linetype6.currentTextChanged.connect(self.comboBox_linetype6_changed)
 
         self.comboBox_marker1.currentTextChanged.connect(self.comboBox_marker1_changed)
+        # self.dialog.comboBox_marker.currentTextChanged.connect(self.comboBox_marker_changed)
+        # self.comboBox_marker1.currentTextChanged.connect(self.comboBox_marker1_changed)
 
         self.pushButton_S11.clicked.connect(self.calc_s11_data)
         self.pushButton_S21.clicked.connect(self.calc_s21_data)
@@ -172,7 +174,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         items = ChartProps.get_line_markers()
         keys = list(items.keys())
-
+        # self.dialog.comboBox_marker.addItems(keys)
         self.comboBox_marker1.addItems(keys)
         self.comboBox_marker2.addItems(keys)
         self.comboBox_marker3.addItems(keys)
@@ -205,24 +207,27 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.files_to_plot = self.get_files_to_plot()
 
     def plot_chart(self):
-        # self.plot_chart_init()
-        self.dialog.delete_plot_items()
+
+        if not self.checkBox_do_not_delete_current_plots.isChecked():
+            self.dialog.delete_plot_items()
         chart_plot_item = self.dialog.chart
         chart_plot_item.setTitle(self.title, **{'color': '#000', 'size': '14pt'})
 
+        plots_number = self.dialog.get_chart_plot_items_number()
+
         for i, y_value in enumerate(self.y_values):
-            plot_item = pg.PlotCurveItem(
+            if self.chart_properties[i].marker:
+                symb = self.chart_properties[i].marker
+            else:
+                symb = None
 
-
-                # symbol=self.chart_properties[i].marker,
-                # ignoreBounds=True,
-            )
+            plot_item = pg.PlotDataItem()
             plot_item.setData(
                 x=self.freq_values[i],
                 y=y_value,
-                symbol='o',
-                pen=self.get_pen_by_int(i),
-                name='график {}'.format(i),
+                symbol=symb,
+                pen=self.get_pen_by_int(i + plots_number),
+                name='график {}'.format(i + plots_number),
             )
             chart_plot_item.addItem(plot_item)
 
@@ -237,11 +242,17 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.dialog.show()
 
     def get_pen_by_int(self, chart_num):
-        return pg.mkPen(
-            self.chart_properties[chart_num].color,
-            width=self.chart_properties[chart_num].line_thick,
-            style=self.chart_properties[chart_num].type,
-        )
+        N = len(self.chart_properties)
+
+        if N > chart_num:
+            pen = pg.mkPen(
+                self.chart_properties[chart_num].color,
+                width=self.chart_properties[chart_num].line_thick,
+                style=self.chart_properties[chart_num].type,
+            )
+        else:
+            pen = pg.mkPen('k')
+        return pen
 
     def to_json(self):
         data = dict()
@@ -372,6 +383,10 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
     def comboBox_marker1_changed(self, value):
         self.chart_properties[0].marker = value
+        self.plot_chart()
+
+    def comboBox_marker_changed(self, value):
+        # self.chart_properties[0].marker = value
         self.plot_chart()
 
     # ------------ ТОЛЩИНА -------------------#

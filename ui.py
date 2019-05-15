@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(707, 390)
+        Dialog.resize(712, 390)
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.tabWidget = QtWidgets.QTabWidget(Dialog)
@@ -543,13 +543,16 @@ class Ui_Dialog(object):
         self.verticalLayout_3.addWidget(self.pushButton_Rx2_im)
         self.horizontalLayout.addLayout(self.verticalLayout_3)
         self.verticalLayout_4.addLayout(self.horizontalLayout)
+        self.checkBox_do_not_delete_current_plots = QtWidgets.QCheckBox(self.tab_2)
+        self.checkBox_do_not_delete_current_plots.setObjectName("checkBox_do_not_delete_current_plots")
+        self.verticalLayout_4.addWidget(self.checkBox_do_not_delete_current_plots)
         spacerItem2 = QtWidgets.QSpacerItem(20, 201, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_4.addItem(spacerItem2)
         self.tabWidget.addTab(self.tab_2, "")
         self.verticalLayout.addWidget(self.tabWidget)
 
         self.retranslateUi(Dialog)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
@@ -578,11 +581,12 @@ class Ui_Dialog(object):
         self.pushButton_S21_ang.setText(_translate("Dialog", "Фаза"))
         self.pushButton_S22.setText(_translate("Dialog", "S22"))
         self.pushButton_S22_ang.setText(_translate("Dialog", "Фаза"))
-        self.pushButton_VSWR1.setText(_translate("Dialog", "VSWR1"))
-        self.pushButton_VSWR2.setText(_translate("Dialog", "VSWR2"))
+        self.pushButton_VSWR1.setText(_translate("Dialog", "КСВН1"))
+        self.pushButton_VSWR2.setText(_translate("Dialog", "КСВН2"))
         self.pushButton_Rx1_re.setText(_translate("Dialog", "Z1_re"))
         self.pushButton_Rx1_im.setText(_translate("Dialog", "Z1_im"))
         self.pushButton_Rx2_re.setText(_translate("Dialog", "Z2_re"))
         self.pushButton_Rx2_im.setText(_translate("Dialog", "Z2_im"))
+        self.checkBox_do_not_delete_current_plots.setText(_translate("Dialog", "Не удалять графики"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "Графики"))
 

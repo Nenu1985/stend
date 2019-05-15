@@ -27,10 +27,21 @@ class ChartProperties:
             ('штрихпунктирпунктир', QtCore.Qt.DashDotDotLine),
              ])
 
+    # keys=['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star']
     @classmethod
     def get_line_markers(cls):
         return OrderedDict([
             ('', ''),
-            ('*', ''),
-            ('о', ''),
+            ('o', ''),
+            ('s', ''),
+            ('t', ''),
+            ('t1', ''),
+            ('t2', ''),
+            ('t3', ''),
+            ('d', ''),
+            ('+', ''),
+            ('x', ''),
+            ('p', ''),
+            ('h', ''),
+            ('star', ''),
              ])

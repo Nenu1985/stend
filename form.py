@@ -87,6 +87,9 @@ class Ui_Dialog(object):
         self.spinBox_x_min.setProperty("value", 0)
         self.spinBox_x_min.setObjectName("spinBox_x_min")
         self.gridLayout_5.addWidget(self.spinBox_x_min, 3, 1, 1, 1)
+        self.comboBox_marker = QtWidgets.QComboBox(Dialog)
+        self.comboBox_marker.setObjectName("comboBox_marker")
+        self.gridLayout_5.addWidget(self.comboBox_marker, 3, 0, 1, 1)
         self.gridLayout.addLayout(self.gridLayout_5, 0, 0, 1, 1)
 
         self.retranslateUi(Dialog)
