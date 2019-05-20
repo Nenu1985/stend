@@ -30,6 +30,18 @@ class CustomViewBox(pg.ViewBox):
         self.proxy = ''
         self.vLine = pg.InfiniteLine(angle=90, movable=False)
         self.hLine = pg.InfiniteLine(angle=0, movable=False)
+        self.vLine_freq_low = pg.InfiniteLine(
+            angle=90,
+            movable=False,
+            pos=170,
+            pen=pg.mkPen('r', width=2, style=QtCore.Qt.DashLine),
+        )
+        self.vLine_freq_high = pg.InfiniteLine(
+            angle=90,
+            movable=False,
+            pos=220,
+            pen=pg.mkPen('r', width=2, style=QtCore.Qt.DashLine),
+        )
         # self.addItem(self.vLine)
         # self.addItem(self.hLine)
 
@@ -105,6 +117,8 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.gr_layout.addItem(vb.label, 0, 1)
         self.chart.addItem(vb.vLine)
         self.chart.addItem(vb.hLine)
+        self.chart.addItem(vb.vLine_freq_low)
+        self.chart.addItem(vb.vLine_freq_high)
         # legend = layout.addLabel('_________________',0,1)
         vb.subscribe_to_mouse_event()
 
@@ -164,7 +178,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
     def get_chart_plot_items_number(self):
         number = 0
         for plot_item in self.chart.items:
-            if type(plot_item) is pg.PlotCurveItem:
+            if type(plot_item) is pg.PlotDataItem:
                 number += 1
         return number
 
@@ -281,6 +295,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
             xRange=[self.spinBox_x_min.value(), self.spinBox_x_max.value()],
             padding=0,
         )
+
     def doubleSpinBox_y_max_valueChanged(self):
         self.grid_range_settings_y(
             [self.doubleSpinBox_y_min.value(), self.doubleSpinBox_y_max.value()],

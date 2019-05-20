@@ -210,6 +210,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         if not self.checkBox_do_not_delete_current_plots.isChecked():
             self.dialog.delete_plot_items()
+
         chart_plot_item = self.dialog.chart
         chart_plot_item.setTitle(self.title, **{'color': '#000', 'size': '14pt'})
 
@@ -537,7 +538,10 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def calc_s11_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(0, self.files)
-        self.title = 'S11'
+        if not self.checkBox_do_not_delete_current_plots.isChecked():
+            self.title = 'S11'
+        else:
+            self.title += ' + S11'
         self.plot_chart()
 
     def calc_s12_data(self):
@@ -557,7 +561,10 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def calc_s22_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(6, self.files)
-        self.title = 'S22'
+        if not self.checkBox_do_not_delete_current_plots.isChecked():
+            self.title = 'S22'
+        else:
+            self.title += ' + S22'
         self.plot_chart()
 
     def calc_S11_ang_data(self):
