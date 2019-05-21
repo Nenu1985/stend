@@ -38,8 +38,10 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             print('There is no setting file "data.txt"')
 
         self.files = json_data['files']
+        self.files_smp = json_data['files_smp']
         self.impedance = json_data['impedance']
         self.files_to_plot = json_data['files_to_plot']
+        self.files_to_plot_smp = json_data.get('files_to_plot_smp', '')
         self.chart_legend_offset = json_data.get('chart_legend_offset', (600, 30))
         self.title = 'График'
         self.chart_properties = []
@@ -66,6 +68,12 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.checkBox_filePlot4.stateChanged.connect(self.set_files_to_plot)
         self.checkBox_filePlot5.stateChanged.connect(self.set_files_to_plot)
         self.checkBox_filePlot6.stateChanged.connect(self.set_files_to_plot)
+        self.checkBox_filePlot1_smp.stateChanged.connect(self.set_files_to_plot_smp)
+        self.checkBox_filePlot2_smp.stateChanged.connect(self.set_files_to_plot_smp)
+        self.checkBox_filePlot3_smp.stateChanged.connect(self.set_files_to_plot_smp)
+        self.checkBox_filePlot4_smp.stateChanged.connect(self.set_files_to_plot_smp)
+        self.checkBox_filePlot5_smp.stateChanged.connect(self.set_files_to_plot_smp)
+        self.checkBox_filePlot6_smp.stateChanged.connect(self.set_files_to_plot_smp)
 
         self.pushButton_open_file1.clicked.connect(self.onclick_open_file1)
         self.pushButton_open_file2.clicked.connect(self.onclick_open_file2)
@@ -73,6 +81,12 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.pushButton_open_file4.clicked.connect(self.onclick_open_file4)
         self.pushButton_open_file5.clicked.connect(self.onclick_open_file5)
         self.pushButton_open_file6.clicked.connect(self.onclick_open_file6)
+        self.pushButton_open_file1_smp.clicked.connect(self.onclick_open_file1_smp)
+        self.pushButton_open_file2_smp.clicked.connect(self.onclick_open_file2_smp)
+        self.pushButton_open_file3_smp.clicked.connect(self.onclick_open_file3_smp)
+        self.pushButton_open_file4_smp.clicked.connect(self.onclick_open_file4_smp)
+        self.pushButton_open_file5_smp.clicked.connect(self.onclick_open_file5_smp)
+        self.pushButton_open_file6_smp.clicked.connect(self.onclick_open_file6_smp)
 
         self.spinBox_impedance.valueChanged.connect(self.spinBox_impedance_valueChanged)
 
@@ -89,6 +103,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.spinBox_thickness4.valueChanged.connect(self.spinBox_thickness4_valueChanged)
         self.spinBox_thickness5.valueChanged.connect(self.spinBox_thickness5_valueChanged)
         self.spinBox_thickness6.valueChanged.connect(self.spinBox_thickness6_valueChanged)
+
+        # self.spinBox_vert_line_low_freq.valueChanged.connect(self.spinBox_vert_line_low_freq_valueChanged)
 
         self.comboBox_linetype1.currentTextChanged.connect(self.comboBox_linetype1_changed)
         self.comboBox_linetype2.currentTextChanged.connect(self.comboBox_linetype2_changed)
@@ -117,6 +133,9 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.pushButton_S21_ang.clicked.connect(self.calc_S21_ang_data)
         self.pushButton_S22_ang.clicked.connect(self.calc_S22_ang_data)
 
+        self.pushButton_smp_plot_vswr.clicked.connect(self.pushButton_smp_plot_vswr_click)
+        self.pushButton_smp_plot_phase.clicked.connect(self.pushButton_smp_plot_phase_click)
+
         self.freq_values = []
         self.y_values = []
         # при нажатии кнопки
@@ -133,6 +152,12 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.lineEdit_filename4.setText(self.files[3])
         self.lineEdit_filename5.setText(self.files[4])
         self.lineEdit_filename6.setText(self.files[5])
+        self.lineEdit_filename1_smp.setText(self.files_smp[0])
+        self.lineEdit_filename2_smp.setText(self.files_smp[1])
+        self.lineEdit_filename3_smp.setText(self.files_smp[2])
+        self.lineEdit_filename4_smp.setText(self.files_smp[3])
+        self.lineEdit_filename5_smp.setText(self.files_smp[4])
+        self.lineEdit_filename6_smp.setText(self.files_smp[5])
 
         self.pushButton_color1.setStyleSheet("background-color: {}".format(self.chart_properties[0].color))
         self.pushButton_color2.setStyleSheet("background-color: {}".format(self.chart_properties[1].color))
@@ -154,6 +179,12 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.checkBox_filePlot4.setCheckState(self.files_to_plot[3])
         self.checkBox_filePlot5.setCheckState(self.files_to_plot[4])
         self.checkBox_filePlot6.setCheckState(self.files_to_plot[5])
+        self.checkBox_filePlot1_smp.setCheckState(self.files_to_plot_smp[0])
+        self.checkBox_filePlot2_smp.setCheckState(self.files_to_plot_smp[1])
+        self.checkBox_filePlot3_smp.setCheckState(self.files_to_plot_smp[2])
+        self.checkBox_filePlot4_smp.setCheckState(self.files_to_plot_smp[3])
+        self.checkBox_filePlot5_smp.setCheckState(self.files_to_plot_smp[4])
+        self.checkBox_filePlot6_smp.setCheckState(self.files_to_plot_smp[5])
 
         items = ChartProps.get_line_types()
         keys = list(items.keys())
@@ -188,6 +219,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.comboBox_linetype5.setCurrentIndex(keys.index(self.chart_properties[4].marker))
         self.comboBox_linetype6.setCurrentIndex(keys.index(self.chart_properties[5].marker))
 
+
     def get_files_to_plot(self):
         """
         Check checkboxes for plotting file
@@ -201,10 +233,25 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             self.checkBox_filePlot5.isChecked(),
             self.checkBox_filePlot6.isChecked(),
         ]
+
         return files_to_plots
+
+    def get_files_to_plot_smp(self):
+        files_to_plots_smp = [
+            self.checkBox_filePlot1_smp.isChecked(),
+            self.checkBox_filePlot2_smp.isChecked(),
+            self.checkBox_filePlot3_smp.isChecked(),
+            self.checkBox_filePlot4_smp.isChecked(),
+            self.checkBox_filePlot5_smp.isChecked(),
+            self.checkBox_filePlot6_smp.isChecked(),
+        ]
+        return files_to_plots_smp
 
     def set_files_to_plot(self):
         self.files_to_plot = self.get_files_to_plot()
+
+    def set_files_to_plot_smp(self):
+        self.files_to_plot_smp = self.get_files_to_plot_smp()
 
     def plot_chart(self):
 
@@ -216,7 +263,16 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         plots_number = self.dialog.get_chart_plot_items_number()
 
-        for i, y_value in enumerate(self.y_values):
+        freqs = []
+        valueses = []
+        if self.tabWidget.currentIndex() == 1:
+            freqs = self.freq_values
+            valueses = self.y_values
+        else:
+            freqs = self.freq_values_smp
+            valueses = self.y_values_smp
+
+        for i, y_value in enumerate(valueses):
             if self.chart_properties[i].marker:
                 symb = self.chart_properties[i].marker
             else:
@@ -224,21 +280,31 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
             plot_item = pg.PlotDataItem()
             plot_item.setData(
-                x=self.freq_values[i],
+                x=freqs[i],
                 y=y_value,
                 symbol=symb,
                 pen=self.get_pen_by_int(i + plots_number),
                 name='график {}'.format(i + plots_number),
             )
+
             chart_plot_item.addItem(plot_item)
 
         # self.enableCrossHairs(chart_pw)
         self.dialog.plot_chart()
 
+        self.dialog.view_box.vLine_freq_low.setPos(self.spinBox_vert_line_low_freq.value())
+        self.dialog.view_box.vLine_freq_high.setPos(self.spinBox_vert_line_freq_high.value())
+
         file_name_list_to_dialog = []
-        for i, file in enumerate(self.files):
-            if self.get_files_to_plot()[i]:
-                file_name_list_to_dialog.append(file)
+        if self.tabWidget.currentIndex() == 1:  # 1 tab
+            for i, file in enumerate(self.files):
+                if self.get_files_to_plot()[i]:
+                    file_name_list_to_dialog.append(file)
+        if self.tabWidget.currentIndex() == 2:  # 2 tab
+            for i, file in enumerate(self.files_smp):
+                if self.get_files_to_plot_smp()[i]:
+                    file_name_list_to_dialog.append(file)
+
         self.dialog.files_names = file_name_list_to_dialog
         self.dialog.show()
 
@@ -258,11 +324,13 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def to_json(self):
         data = dict()
         data['files'] = self.files
+        data['files_smp'] = self.files_smp
         data['chart_properties'] = [i.__dict__ for i in self.chart_properties]
         data['impedance'] = self.impedance
         data['main_geometry'] = self.geometry().getRect()
         data['child_geometry'] = self.dialog.geometry().getRect()
         data['files_to_plot'] = self.get_files_to_plot()
+        data['files_to_plot_smp'] = self.get_files_to_plot_smp()
         # data['chart_legend_offset'] = self.dialog.widget.plotItem.legend.offset
 
         with open('data.txt', 'w') as outfile:
@@ -290,9 +358,12 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             if len(line) == 9:  # case for s2p
                 f, *values = line
                 data[float(f) / 10 ** 6] = list(map(float, values))
-            if len(line) == 3:  # case for s1p
+            if len(line) == 3 and filename and filename[-3:] == 's1p':  # case for s1p
                 f, *values = line
                 data[float(f) / 10 ** 6] = list(map(float, values))
+            if len(line) == 3 and filename and filename[-3:] == 'smp':  # case for smp
+                f, *values = line
+                data[float(f)] = list(map(float, values))
 
         data = collections.OrderedDict(sorted(data.items()))
         freq_values = list(data.keys())
@@ -310,14 +381,24 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         """
         freq_values_out = []
         values = []
-        for i, data_file in enumerate(data_files):
-            if self.files_to_plot[i]:
-                freq_values,  values_correct_format = self.read_data_file(data_file)
-                if not freq_values.any() and not values_correct_format.any():
-                    continue
-                if column_number <= values_correct_format.shape[1] - 1:
-                    freq_values_out.append(freq_values)
-                    values.append(values_correct_format[:, column_number])
+        if self.tabWidget.currentIndex() == 1:
+            for i, data_file in enumerate(data_files):
+                if self.files_to_plot[i]:
+                    freq_values,  values_correct_format = self.read_data_file(data_file)
+                    if not freq_values.any() and not values_correct_format.any():
+                        continue
+                    if column_number <= values_correct_format.shape[1] - 1:
+                        freq_values_out.append(freq_values)
+                        values.append(values_correct_format[:, column_number])
+        else:
+            for i, data_file in enumerate(data_files):
+                if self.files_to_plot_smp[i]:
+                    freq_values,  values_correct_format = self.read_data_file(data_file)
+                    if not freq_values.any() and not values_correct_format.any():
+                        continue
+                    if column_number <= values_correct_format.shape[1] - 1:
+                        freq_values_out.append(freq_values)
+                        values.append(values_correct_format[:, column_number])
         return freq_values_out, values
 
     def calc_vswr(self, port_number, data_files):
@@ -353,10 +434,16 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         return freqs, zx
 
     def browse_folder(self):
-        return QtWidgets.QFileDialog.getOpenFileName(self, 'Выберите файл')[0]
+        if self.tabWidget.currentIndex() == 1:  # plots s1p - s2p
+            return QtWidgets.QFileDialog.getOpenFileName(self, 'Выберите файл')[0]
+        else:  # plots smp
+            return QtWidgets.QFileDialog.getOpenFileName(self, 'Выберите файл', filter="smp(*.smp)")[0]
+
 
 
 # -------------------------------------- EVENT HANDLERS ----------------------#
+#     def spinBox_vert_line_low_freq_valueChanged(self, value):
+
     # ------------ ТИП (штрих и т.д.) -------------------#
     def comboBox_linetype1_changed(self, value):
         self.chart_properties[0].type = ChartProps.get_line_types().get(value, QtCore.Qt.SolidLine)
@@ -445,6 +532,29 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.files[5] = self.browse_folder()
         self.lineEdit_filename6.setText(self.files[5])
 
+    def onclick_open_file1_smp(self):
+        self.files_smp[0] = self.browse_folder()
+        self.lineEdit_filename1_smp.setText(self.files_smp[0])
+
+    def onclick_open_file2_smp(self):
+        self.files_smp[1] = self.browse_folder()
+        self.lineEdit_filename2_smp.setText(self.files_smp[1])
+
+    def onclick_open_file3_smp(self):
+        self.files_smp[2] = self.browse_folder()
+        self.lineEdit_filename3_smp.setText(self.files_smp[2])
+
+    def onclick_open_file4_smp(self):
+        self.files_smp[3] = self.browse_folder()
+        self.lineEdit_filename4_smp.setText(self.files_smp[3])
+
+    def onclick_open_file5_smp(self):
+        self.files_smp[4] = self.browse_folder()
+        self.lineEdit_filename5_smp.setText(self.files_smp[4])
+
+    def onclick_open_file6_smp(self):
+        self.files_smp[5] = self.browse_folder()
+        self.lineEdit_filename6_smp.setText(self.files_smp[5])
     # ------------ ЦВЕТ -------------------#
     def onclick_color1(self):
         color = QColorDialog.getColor()
@@ -590,6 +700,20 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.freq_values, self.y_values = self.get_data_values(7, self.files)
         self.title = 'S22 фаза'
         self.plot_chart()
+
+    def pushButton_smp_plot_vswr_click(self):
+        self.y_values_smp = []
+        self.freq_values_smp, self.y_values_smp = self.get_data_values(0, self.files_smp)
+        self.title = 'КСВН'
+        self.plot_chart()
+
+    def pushButton_smp_plot_phase_click(self):
+        self.y_values_smp = []
+        self.freq_values_smp, self.y_values_smp = self.get_data_values(1, self.files_smp)
+        self.title = 'Фаза'
+        self.plot_chart()
+
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

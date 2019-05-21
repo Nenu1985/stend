@@ -19,8 +19,6 @@ from PyQt5.QtGui import QFont
 class CustomViewBox(pg.ViewBox):
     # cross hair
 
-
-
     def __init__(self, parent_chart_dialog, *args, **kwds):
         pg.ViewBox.__init__(self, *args, **kwds)
         self.setMouseMode(self.RectMode)
@@ -30,6 +28,8 @@ class CustomViewBox(pg.ViewBox):
         self.proxy = ''
         self.vLine = pg.InfiniteLine(angle=90, movable=False)
         self.hLine = pg.InfiniteLine(angle=0, movable=False)
+        self.is_v_lines_plot = True
+
         self.vLine_freq_low = pg.InfiniteLine(
             angle=90,
             movable=False,
@@ -90,6 +90,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.chart = pg.PlotItem()
         self.view = pg.GraphicsView()
         self.gr_layout = pg.GraphicsLayout()
+        self.view_box = CustomViewBox(self)
         self.files_names = []
 
         # self.plot_chart_init()
@@ -100,9 +101,10 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.spinBox_x_min.valueChanged.connect(self.spinBox_x_max_valueChanged)
         self.doubleSpinBox_y_max.valueChanged.connect(self.doubleSpinBox_y_max_valueChanged)
         self.doubleSpinBox_y_min.valueChanged.connect(self.doubleSpinBox_y_max_valueChanged)
+        self.doubleSpinBox_step_y_grid.valueChanged.connect(self.doubleSpinBox_step_y_grid_valueChanged)
 
     def plot_chart_init(self):
-        vb = CustomViewBox(self)
+        self.view_box = CustomViewBox(self)
 
         self.gr_layout = pg.GraphicsLayout()
         # set left margin
@@ -111,16 +113,17 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.view = pg.GraphicsView(background=pg.mkColor('w'))
         self.view.setCentralItem(self.gr_layout)
         #
-        self.chart = pg.PlotItem(enableMenu=False, viewBox=vb)
+        self.chart = pg.PlotItem(enableMenu=False, viewBox=self.view_box)
         self.gr_layout.addItem(self.chart, 0, 0)
         # self.chart = self.gr_layout.addPlot(0, 0, enableMenu=False, viewBox=vb)
-        self.gr_layout.addItem(vb.label, 0, 1)
-        self.chart.addItem(vb.vLine)
-        self.chart.addItem(vb.hLine)
-        self.chart.addItem(vb.vLine_freq_low)
-        self.chart.addItem(vb.vLine_freq_high)
+        self.gr_layout.addItem(self.view_box.label, 0, 1)
+        self.chart.addItem(self.view_box.vLine)
+        self.chart.addItem(self.view_box.hLine)
+        if self.view_box.is_v_lines_plot:
+            self.chart.addItem(self.view_box.vLine_freq_low)
+            self.chart.addItem(self.view_box.vLine_freq_high)
         # legend = layout.addLabel('_________________',0,1)
-        vb.subscribe_to_mouse_event()
+        self.view_box.subscribe_to_mouse_event()
 
         bottom_axes = self.chart.getAxis('bottom')
         left_axes = self.chart.getAxis('left')
@@ -281,7 +284,8 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
     def grid_range_settings_y(self, values_range):
         start = values_range[0]
         end = values_range[1]
-        dy = (end-start)/6
+
+        dy = (end-start) / self.doubleSpinBox_step_y_grid.value()
         delta = [(value, '{:.2f}'.format(value)) for value in list(drange(start, end, dy))]
         delta.append((end, '{:.2f}'.format(end)))
         ay = self.chart.getAxis('left')
@@ -304,6 +308,9 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
             yRange=[self.doubleSpinBox_y_min.value(), self.doubleSpinBox_y_max.value()],
             padding=0,
         )
+
+    def doubleSpinBox_step_y_grid_valueChanged(self):
+        self.plot_chart()
 
 def drange(start, stop, step):
         r = start
