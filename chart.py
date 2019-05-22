@@ -28,7 +28,7 @@ class CustomViewBox(pg.ViewBox):
         self.proxy = ''
         self.vLine = pg.InfiniteLine(angle=90, movable=False)
         self.hLine = pg.InfiniteLine(angle=0, movable=False)
-        self.is_v_lines_plot = True
+
 
         self.vLine_freq_low = pg.InfiniteLine(
             angle=90,
@@ -40,6 +40,12 @@ class CustomViewBox(pg.ViewBox):
             angle=90,
             movable=False,
             pos=220,
+            pen=pg.mkPen('r', width=2, style=QtCore.Qt.DashLine),
+        )
+        self.hLine_y = pg.InfiniteLine(
+            angle=0,
+            movable=False,
+            pos=2.4,
             pen=pg.mkPen('r', width=2, style=QtCore.Qt.DashLine),
         )
         # self.addItem(self.vLine)
@@ -92,7 +98,8 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.gr_layout = pg.GraphicsLayout()
         self.view_box = CustomViewBox(self)
         self.files_names = []
-
+        self.is_v_lines_plot = True
+        self.is_h_lines_plot = True
         # self.plot_chart_init()
 
         self.openButton.clicked.connect(self.plot_to_word)
@@ -119,9 +126,11 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.gr_layout.addItem(self.view_box.label, 0, 1)
         self.chart.addItem(self.view_box.vLine)
         self.chart.addItem(self.view_box.hLine)
-        if self.view_box.is_v_lines_plot:
+        if self.is_v_lines_plot:
             self.chart.addItem(self.view_box.vLine_freq_low)
             self.chart.addItem(self.view_box.vLine_freq_high)
+        if self.is_h_lines_plot:
+            self.chart.addItem(self.view_box.hLine_y)
         # legend = layout.addLabel('_________________',0,1)
         self.view_box.subscribe_to_mouse_event()
 
@@ -284,6 +293,14 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
     def grid_range_settings_y(self, values_range):
         start = values_range[0]
         end = values_range[1]
+
+        if 1 < start < 3:
+            self.doubleSpinBox_y_min.setValue(1)
+        elif -180 < start < -170:
+            self.doubleSpinBox_y_min.setValue(-180)
+
+        if 170 < end < 180:
+            self.doubleSpinBox_y_max.setValue(180)
 
         dy = (end-start) / self.doubleSpinBox_step_y_grid.value()
         delta = [(value, '{:.2f}'.format(value)) for value in list(drange(start, end, dy))]

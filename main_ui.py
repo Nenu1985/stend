@@ -45,6 +45,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.chart_legend_offset = json_data.get('chart_legend_offset', (600, 30))
         self.title = 'График'
         self.chart_properties = []
+        self.freqs_last = []
+        self.values_last = []
         for prop in json_data['chart_properties']:
             self.chart_properties.append(ChartProps(
                 color=prop['color'],
@@ -75,6 +77,9 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.checkBox_filePlot5_smp.stateChanged.connect(self.set_files_to_plot_smp)
         self.checkBox_filePlot6_smp.stateChanged.connect(self.set_files_to_plot_smp)
 
+        self.checkBox_vert_line_show.stateChanged.connect(self.plot_chart)
+        self.checkBox_hor_line_show.stateChanged.connect(self.plot_chart)
+
         self.pushButton_open_file1.clicked.connect(self.onclick_open_file1)
         self.pushButton_open_file2.clicked.connect(self.onclick_open_file2)
         self.pushButton_open_file3.clicked.connect(self.onclick_open_file3)
@@ -104,6 +109,9 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.spinBox_thickness5.valueChanged.connect(self.spinBox_thickness5_valueChanged)
         self.spinBox_thickness6.valueChanged.connect(self.spinBox_thickness6_valueChanged)
 
+        self.spinBox_vert_line_low_freq.valueChanged.connect(self.plot_chart)
+        self.spinBox_vert_line_freq_high.valueChanged.connect(self.plot_chart)
+        self.doubleSpinBox_hor_line.valueChanged.connect(self.plot_chart)
         # self.spinBox_vert_line_low_freq.valueChanged.connect(self.spinBox_vert_line_low_freq_valueChanged)
 
         self.comboBox_linetype1.currentTextChanged.connect(self.comboBox_linetype1_changed)
@@ -114,6 +122,11 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.comboBox_linetype6.currentTextChanged.connect(self.comboBox_linetype6_changed)
 
         self.comboBox_marker1.currentTextChanged.connect(self.comboBox_marker1_changed)
+        self.comboBox_marker2.currentTextChanged.connect(self.comboBox_marker2_changed)
+        self.comboBox_marker3.currentTextChanged.connect(self.comboBox_marker3_changed)
+        self.comboBox_marker4.currentTextChanged.connect(self.comboBox_marker4_changed)
+        self.comboBox_marker5.currentTextChanged.connect(self.comboBox_marker5_changed)
+        self.comboBox_marker6.currentTextChanged.connect(self.comboBox_marker6_changed)
         # self.dialog.comboBox_marker.currentTextChanged.connect(self.comboBox_marker_changed)
         # self.comboBox_marker1.currentTextChanged.connect(self.comboBox_marker1_changed)
 
@@ -135,6 +148,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         self.pushButton_smp_plot_vswr.clicked.connect(self.pushButton_smp_plot_vswr_click)
         self.pushButton_smp_plot_phase.clicked.connect(self.pushButton_smp_plot_phase_click)
+
+
 
         self.freq_values = []
         self.y_values = []
@@ -255,6 +270,9 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
     def plot_chart(self):
 
+        self.dialog.is_v_lines_plot = self.checkBox_vert_line_show.isChecked()
+        self.dialog.is_h_lines_plot = self.checkBox_hor_line_show.isChecked()
+
         if not self.checkBox_do_not_delete_current_plots.isChecked():
             self.dialog.delete_plot_items()
 
@@ -268,9 +286,16 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         if self.tabWidget.currentIndex() == 1:
             freqs = self.freq_values
             valueses = self.y_values
-        else:
+        elif self.tabWidget.currentIndex() == 2:
             freqs = self.freq_values_smp
             valueses = self.y_values_smp
+
+        if not freqs:
+            freqs = self.freqs_last
+            valueses = self.values_last
+
+        self.freqs_last = freqs
+        self.values_last = valueses
 
         for i, y_value in enumerate(valueses):
             if self.chart_properties[i].marker:
@@ -294,6 +319,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         self.dialog.view_box.vLine_freq_low.setPos(self.spinBox_vert_line_low_freq.value())
         self.dialog.view_box.vLine_freq_high.setPos(self.spinBox_vert_line_freq_high.value())
+        self.dialog.view_box.hLine_y.setPos(self.doubleSpinBox_hor_line.value())
 
         file_name_list_to_dialog = []
         if self.tabWidget.currentIndex() == 1:  # 1 tab
@@ -471,6 +497,26 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
     def comboBox_marker1_changed(self, value):
         self.chart_properties[0].marker = value
+        self.plot_chart()
+
+    def comboBox_marker2_changed(self, value):
+        self.chart_properties[1].marker = value
+        self.plot_chart()
+
+    def comboBox_marker3_changed(self, value):
+        self.chart_properties[2].marker = value
+        self.plot_chart()
+
+    def comboBox_marker4_changed(self, value):
+        self.chart_properties[3].marker = value
+        self.plot_chart()
+
+    def comboBox_marker5_changed(self, value):
+        self.chart_properties[4].marker = value
+        self.plot_chart()
+
+    def comboBox_marker6_changed(self, value):
+        self.chart_properties[5].marker = value
         self.plot_chart()
 
     def comboBox_marker_changed(self, value):
@@ -712,6 +758,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.freq_values_smp, self.y_values_smp = self.get_data_values(1, self.files_smp)
         self.title = 'Фаза'
         self.plot_chart()
+
 
 
 
