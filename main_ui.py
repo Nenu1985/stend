@@ -374,7 +374,9 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
             print('No such file (read_data_file funct)')
             return np.asarray([]).astype(np.float), np.asarray([]).astype(np.float)
 
-        if content:
+        if content and filename[-3:] == 'smp':
+            content = content[:]
+        elif content:
             content = content[5:]
         else:
             return np.asarray([]).astype(np.float), np.asarray([]).astype(np.float)
