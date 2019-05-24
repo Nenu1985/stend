@@ -37,16 +37,17 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         except FileNotFoundError:
             print('There is no setting file "data.txt"')
 
-        self.files = json_data['files']
-        self.files_smp = json_data['files_smp']
-        self.impedance = json_data['impedance']
-        self.files_to_plot = json_data['files_to_plot']
+        self.files = json_data['files']  # files with data (1 tab)
+        self.files_smp = json_data['files_smp']  # files with data (2 tab)
+        self.impedance = json_data['impedance']  # impedance value
+        self.files_to_plot = json_data['files_to_plot']  # checkboxes states is file to plot
         self.files_to_plot_smp = json_data.get('files_to_plot_smp', '')
         self.chart_legend_offset = json_data.get('chart_legend_offset', (600, 30))
-        self.title = 'График'
-        self.chart_properties = []
-        self.freqs_last = []
-        self.values_last = []
+        self.title = 'График'  # default title vale
+        self.freqs_last = []  # last plotted freqs values
+        self.values_last = []  # last plotted Y values
+
+        self.chart_properties = []  # to store lines color, width, marker ...
         for prop in json_data['chart_properties']:
             self.chart_properties.append(ChartProps(
                 color=prop['color'],
@@ -59,9 +60,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.setGeometry(QtCore.QRect(*json_data['main_geometry']))
         self.dialog.setGeometry(QtCore.QRect(*json_data['child_geometry']))
 
-
         # Отображаем начальные значения в контролах
-        self.set_init_values_to_controls()
+        self.set_init_values_to_controls(json_data)
 
         # ----------- ПОДПИСЬ ОБРАБОТЧИКОВ СОБЫТИЙ --------------- #
         self.checkBox_filePlot1.stateChanged.connect(self.set_files_to_plot)
@@ -129,6 +129,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.comboBox_marker6.currentTextChanged.connect(self.comboBox_marker6_changed)
         # self.dialog.comboBox_marker.currentTextChanged.connect(self.comboBox_marker_changed)
         # self.comboBox_marker1.currentTextChanged.connect(self.comboBox_marker1_changed)
+        # self.comboBox_format_input_data.currentTextChanged.connect(self.calc_s11_data)
 
         self.pushButton_S11.clicked.connect(self.calc_s11_data)
         self.pushButton_S21.clicked.connect(self.calc_s21_data)
@@ -155,7 +156,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.y_values = []
         # при нажатии кнопки
 
-    def set_init_values_to_controls(self):
+    def set_init_values_to_controls(self, json_data):
         self.dialog.setWindowTitle('График')
 
         self.setWindowTitle('Входные характеристики')
@@ -217,6 +218,9 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.comboBox_linetype4.setCurrentIndex(list(items.values()).index(self.chart_properties[3].type))
         self.comboBox_linetype5.setCurrentIndex(list(items.values()).index(self.chart_properties[4].type))
         self.comboBox_linetype6.setCurrentIndex(list(items.values()).index(self.chart_properties[5].type))
+
+        # format of data Db or times
+        self.comboBox_format_input_data.setCurrentIndex(json_data.get('format_input_data', 0))
 
         items = ChartProps.get_line_markers()
         keys = list(items.keys())
@@ -357,6 +361,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         data['child_geometry'] = self.dialog.geometry().getRect()
         data['files_to_plot'] = self.get_files_to_plot()
         data['files_to_plot_smp'] = self.get_files_to_plot_smp()
+        data['format_input_data'] = self.comboBox_format_input_data.currentIndex()
         # data['chart_legend_offset'] = self.dialog.widget.plotItem.legend.offset
 
         with open('data.txt', 'w') as outfile:
@@ -436,9 +441,16 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         else:
             freqs, values = self.get_data_values(0, data_files)  # abs(S11)
 
+
+        if self.comboBox_format_input_data.currentIndex() == 1:  # Дб
+            values = 10 ** np.divide(values, 20)  # переводим в разы
+
         vswr = []  # type: List[float]
         for value in values:
             vswr.append((1 + value) / (1 - value))
+
+
+
 
         return freqs, vswr
 
@@ -696,33 +708,47 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
     def calc_s11_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(0, self.files)
+
+        if self.comboBox_format_input_data.currentIndex() == 1:  # Дб
+            self.y_values = 10 ** np.divide(self.y_values, 20)  # переводим в разы
+
         if not self.checkBox_do_not_delete_current_plots.isChecked():
-            self.title = 'S11'
+            self.title = 'S11, разы'
         else:
-            self.title += ' + S11'
+            self.title += ' + S11, разы'
         self.plot_chart()
 
     def calc_s12_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(2, self.files)
-        self.y_values = 20 * np.log10(self.y_values)
-        self.title = 'S12'
+
+        if self.comboBox_format_input_data.currentIndex() == 0:  # Разы
+            self.y_values = 20 * np.log10(self.y_values)  # переводим в Дб
+
+        self.title = 'S12, Дб'
         self.plot_chart()
 
     def calc_s21_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(4, self.files)
-        self.y_values = 20 * np.log10(self.y_values)
-        self.title = 'S21'
+
+        if self.comboBox_format_input_data.currentIndex() == 0:  # Разы
+            self.y_values = 20 * np.log10(self.y_values)  # переводим в Дб
+
+        self.title = 'S21, Дб'
         self.plot_chart()
 
     def calc_s22_data(self):
         self.y_values = []
         self.freq_values, self.y_values = self.get_data_values(6, self.files)
+
+        if self.comboBox_format_input_data.currentIndex() == 1:  # Дб
+            self.y_values = 10 ** np.divide(self.y_values, 20)  # переводим в разы
+
         if not self.checkBox_do_not_delete_current_plots.isChecked():
-            self.title = 'S22'
+            self.title = 'S22, разы'
         else:
-            self.title += ' + S22'
+            self.title += ' + S22, разы'
         self.plot_chart()
 
     def calc_S11_ang_data(self):
