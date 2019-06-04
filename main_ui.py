@@ -149,7 +149,9 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
         self.pushButton_smp_plot_vswr.clicked.connect(self.pushButton_smp_plot_vswr_click)
         self.pushButton_smp_plot_phase.clicked.connect(self.pushButton_smp_plot_phase_click)
-
+        self.pushButton_smp_plot_S11.clicked.connect(self.pushButton_smp_plot_s11_click)
+        self.pushButton_smp_plot_Rx_re.clicked.connect(self.pushButton_smp_plot_Rx_re_click)
+        self.pushButton_smp_plot_Rx_im.clicked.connect(self.pushButton_smp_plot_Rx_im_click)
 
 
         self.freq_values = []
@@ -283,7 +285,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         chart_plot_item = self.dialog.chart
         chart_plot_item.setTitle(self.title, **{'color': '#000', 'size': '14pt'})
 
-        plots_number = self.dialog.get_chart_plot_items_number()
+        current_count_of_plots = self.dialog.get_chart_plot_items_number()
 
         freqs = []
         valueses = []
@@ -312,8 +314,8 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
                 x=freqs[i],
                 y=y_value,
                 symbol=symb,
-                pen=self.get_pen_by_int(i + plots_number),
-                name='график {}'.format(i + plots_number),
+                pen=self.get_pen_by_int(i + current_count_of_plots),
+                name='график {}'.format(i + current_count_of_plots),
             )
 
             chart_plot_item.addItem(plot_item)
@@ -449,10 +451,36 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         for value in values:
             vswr.append((1 + value) / (1 - value))
 
-
-
-
         return freqs, vswr
+
+    @staticmethod
+    def calc_s11(vswr_values):
+        s11 = []  # type: List[float]
+        for value in vswr_values:
+            s11.append((value + 1) / (value - 1))
+        s11 = MainApp.db2mag(s11)
+        return s11
+
+    @staticmethod
+    def mag2db(mag_values):
+        db_values = 20 * np.log10(mag_values)  # переводим в Дб
+        return db_values
+
+    @staticmethod
+    def db2mag(db_values):
+        mag_values = 10 ** -np.divide(db_values, 20)  # переводим в разы
+        return mag_values
+
+    @staticmethod
+    def calc_rx_static(mag, ang, z0):
+        zx = []
+        nprect = np.vectorize(rect)
+        for series in range(len(mag)):
+            value_abs = mag[series]
+            value_ang_rad = ang[series] * np.pi / 180
+            complex_ko = nprect(value_abs, value_ang_rad)
+            zx.append(z0 * ((1 + complex_ko) / (1 - complex_ko)))
+        return zx
 
     def calc_rx(self, port_number, data_files, z0):
 
@@ -654,7 +682,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
 
     # ------------ КНОПКИ РАСЧЁТА -------------------#
     def calc_Rx1_re_data(self):
-        self.freq_values, zx =  self.calc_rx(1, self.files, self.impedance)
+        self.freq_values, zx = self.calc_rx(1, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.real)
@@ -665,7 +693,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.plot_chart()
 
     def calc_Rx1_im_data(self):
-        self.freq_values, zx =  self.calc_rx(1, self.files, self.impedance)
+        self.freq_values, zx = self.calc_rx(1, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.imag)
@@ -676,7 +704,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.plot_chart()
 
     def calc_Rx2_re_data(self):
-        self.freq_values, zx =  self.calc_rx(2, self.files, self.impedance)
+        self.freq_values, zx = self.calc_rx(2, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.real)
@@ -685,7 +713,7 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.plot_chart()
 
     def calc_Rx2_im_data(self):
-        self.freq_values, zx =  self.calc_rx(2, self.files, self.impedance)
+        self.freq_values, zx = self.calc_rx(2, self.files, self.impedance)
         values_to_plot = []
         for values in zx:
             values_to_plot.append(values.imag)
@@ -779,6 +807,42 @@ class MainApp(QtWidgets.QDialog, ui.Ui_Dialog):
         self.y_values_smp = []
         self.freq_values_smp, self.y_values_smp = self.get_data_values(0, self.files_smp)
         self.title = 'КСВН'
+        self.plot_chart()
+
+
+    def pushButton_smp_plot_s11_click(self):
+        self.y_values_smp = []
+        self.freq_values_smp, values = self.get_data_values(0, self.files_smp)
+
+        s11 = MainApp.calc_s11(values)
+        self.y_values_smp = s11
+        self.title = 'S11'
+        self.plot_chart()
+
+    def pushButton_smp_plot_Rx_re_click(self):
+        self.y_values_smp = []
+        self.freq_values_smp, vswr_values = self.get_data_values(0, self.files_smp)
+        s11 = MainApp.calc_s11(vswr_values)
+        _, angle_values = self.get_data_values(1, self.files_smp)
+        rx = MainApp.calc_rx_static(s11, angle_values, self.impedance)
+        rx_re = []
+        for r in rx:
+            rx_re.append(r.real)
+        self.y_values_smp = rx_re
+        self.title = 'Rx re'
+        self.plot_chart()
+
+    def pushButton_smp_plot_Rx_im_click(self):
+        self.y_values_smp = []
+        self.freq_values_smp, vswr_values = self.get_data_values(0, self.files_smp)
+        s11 = MainApp.calc_s11(vswr_values)
+        _, angle_values = self.get_data_values(1, self.files_smp)
+        rx = MainApp.calc_rx_static(s11, angle_values, self.impedance)
+        rx_im = []
+        for r in rx:
+            rx_im.append(r.imag)
+        self.y_values_smp = rx_im
+        self.title = 'Rx im'
         self.plot_chart()
 
     def pushButton_smp_plot_phase_click(self):

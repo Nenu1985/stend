@@ -198,7 +198,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         self.plot_chart_init()
 
     def plot_to_word(self):
-        FILE_EXIST_FILE = False
+        FILE_EXISTS = False
         # create an exporter instance, as an argument give it
         # the item you wish to export
         exporter = PGQ_image_exporter.PQG_ImageExporter(self.chart)
@@ -212,7 +212,7 @@ class Chart(QtWidgets.QDialog, form.Ui_Dialog):
         word_file_name = self.lineEdit_word_file_path.text()
         try:
             document = Document(word_file_name)
-            FILE_EXIST_FILE = True
+            FILE_EXISTS = True
         except PackageNotFoundError as e:
             try:
                 document = Document()
